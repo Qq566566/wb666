@@ -16,10 +16,10 @@ try {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VITA | 智能健康与前沿养生指南</title>
+  <title>VITA | Health & Anti-Aging Insights - 智能健康与前沿养生指南</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-color: #fcfbf9;
@@ -30,11 +30,7 @@ try {
       --border-color: #e8ece9;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg-color);
@@ -52,41 +48,48 @@ try {
 
     header {
       text-align: center;
-      margin-bottom: 70px;
+      margin-bottom: 60px;
       padding-bottom: 40px;
       border-bottom: 1px solid var(--border-color);
     }
 
     .tagline {
       display: inline-block;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--accent-color);
       background: #eef4f0;
-      padding: 4px 14px;
+      padding: 4px 16px;
       border-radius: 20px;
       margin-bottom: 16px;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: 600;
       letter-spacing: -0.5px;
       color: var(--text-main);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    header p {
-      color: var(--text-muted);
+    .subtitle-cn {
+      color: var(--text-main);
       font-size: 1.05rem;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .subtitle-en {
+      color: var(--text-muted);
+      font-size: 0.92rem;
       font-weight: 300;
     }
 
     .post-grid {
       display: grid;
-      gap: 32px;
+      gap: 28px;
     }
 
     .post-card {
@@ -104,23 +107,37 @@ try {
       border-color: #d1ddd6;
     }
 
+    .post-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     .post-date {
       font-size: 0.85rem;
       color: var(--text-muted);
-      margin-bottom: 8px;
+    }
+
+    .lang-badge {
+      font-size: 0.75rem;
+      color: var(--accent-color);
+      border: 1px solid #d1ddd6;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
     .post-title {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 600;
       color: var(--text-main);
       margin-bottom: 12px;
-      line-height: 1.35;
+      line-height: 1.4;
     }
 
     .post-desc {
       color: var(--text-muted);
-      font-size: 0.98rem;
+      font-size: 0.96rem;
       font-weight: 300;
     }
 
@@ -134,21 +151,26 @@ try {
 <body>
   <div class="container">
     <header>
-      <span class="tagline">A.I. HEALTH INSIGHTS</span>
+      <span class="tagline">HEALTH & LONGEVITY RESEARCH</span>
       <h1>🌿 VITA 健康生命智库</h1>
-      <p>探索科学营养、睡眠管理与现代前沿抗衰老指南</p>
+      <p class="subtitle-cn">探索科学营养、睡眠管理与现代前沿抗衰老指南</p>
+      <p class="subtitle-en">Science-backed nutrition, sleep optimization, and modern longevity research</p>
     </header>
 
     <main class="post-grid">
       {posts.length === 0 ? (
         <div class="empty-state">
-          <p>🌱 正在撰写精选文章，请稍后刷新...</p>
+          <p>🌱 最新健康研究内容整理中，请稍后刷新...</p>
+          <p style="font-size: 0.85rem; margin-top: 6px;">Updating content repository, please refresh later...</p>
         </div>
       ) : (
         posts.map((post) => (
           <article class="post-card">
-            <div class="post-date">
-              {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : '最近发布'}
+            <div class="post-meta">
+              <span class="post-date">
+                {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}
+              </span>
+              <span class="lang-badge">Bilingual / 中英双语</span>
             </div>
             <h2 class="post-title">{post.data.title}</h2>
             <p class="post-desc">{post.data.description}</p>
