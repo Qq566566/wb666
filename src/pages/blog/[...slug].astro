@@ -3,10 +3,14 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
+  return posts.map((post) => {
+    // 兼容获取 slug/id，剥离 .md 后缀
+    const cleanSlug = (post.slug || post.id).replace(/\.[^/.]+$/, "");
+    return {
+      params: { slug: cleanSlug },
+      props: { post },
+    };
+  });
 }
 
 const { post } = Astro.props;
