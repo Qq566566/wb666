@@ -1,11 +1,48 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// 自动获取 src/content/blog/ 目录下的所有 Markdown 文章，并按日期排序
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>我的 AI 自动化 SEO 博客</title>
+</head>
+<body style="max-width: 800px; margin: 0 auto; padding: 40px 20px; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333;">
+	<header style="margin-bottom: 40px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px;">
+		<h1 style="margin: 0 0 10px 0; color: #111;">🚀 AI 自动化 SEO 博客</h1>
+		<p style="margin: 0; color: #666;">每天由智能体自动深度写作并发布最新的科技与 SEO 文章</p>
+	</header>
+	
+	<main>
+		{posts.length === 0 ? (
+			<p>暂无文章，等待 GitHub Actions 自动运行生成...</p>
+		) : (
+			<div style="display: flex; flex-direction: column; gap: 30px;">
+				{posts.map((post) => (
+					<article style="border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; background: #fff;">
+						<h2 style="margin: 0 0 10px 0;">
+							{post.data.title}
+						</h2>
+						<div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
+							发布日期: {post.data.pubDate.toISOString().split('T')[0]}
+						</div>
+						<p style="margin: 0 0 16px 0; color: #4b5563;">{post.data.description}</p>
+						
+						<!-- 直接将 Markdown 的正文展示在卡片中 -->
+						<div style="border-top: 1px dashed #e5e7eb; padding-top: 12px; color: #374151;">
+							{post.body}
+						</div>
+					</article>
+				))}
+			</div>
+		)}
+	</main>
+</body>
+</html>
