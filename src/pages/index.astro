@@ -1,14 +1,14 @@
 ---
 import { getCollection } from 'astro:content';
 
-let posts = [];
-try {
-  posts = (await getCollection('blog')).sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-  );
-} catch (e) {
-  console.error(e);
-}
+const posts = await getCollection('blog');
+
+// 按时间降序排序
+posts.sort((a, b) => {
+  const dateA = new Date(a.data.pubDate || 0).getTime();
+  const dateB = new Date(b.data.pubDate || 0).getTime();
+  return dateB - dateA;
+});
 ---
 
 <!DOCTYPE html>
@@ -20,7 +20,6 @@ try {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-  
   <style>
     :root {
       --bg-color: #fbfbf9;
@@ -38,135 +37,127 @@ try {
       background-color: var(--bg-color);
       color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.7;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 820px;
+      max-width: 800px;
       margin: 0 auto;
-      padding: 40px 24px 80px 24px;
+      padding: 60px 24px;
     }
 
-    /* Top Navigation bar */
-    nav {
+    /* Navigation Header */
+    header.site-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 30px;
-      margin-bottom: 50px;
+      margin-bottom: 60px;
+      padding-bottom: 24px;
       border-bottom: 1px solid var(--border-color);
     }
 
-    .brand-logo {
-      font-size: 1.1rem;
+    .logo {
+      font-size: 1.25rem;
       font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
+      letter-spacing: -0.3px;
       color: var(--accent-color);
+      text-decoration: none;
     }
 
-    .lang-switcher {
+    .subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .lang-toggle {
       background: var(--accent-light);
       border: 1px solid #d8e2dc;
       color: var(--accent-color);
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       font-weight: 600;
       padding: 6px 14px;
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
-    .lang-switcher:hover {
+    .lang-toggle:hover {
       background: #e2ebe5;
     }
 
-    /* Header */
-    header {
-      text-align: center;
-      margin-bottom: 60px;
+    /* Hero Section */
+    .hero {
+      margin-bottom: 50px;
     }
 
-    .hero-tag {
-      display: inline-block;
-      font-size: 0.72rem;
+    .hero h1 {
+      font-size: 2.2rem;
       font-weight: 600;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--accent-color);
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      font-size: 2.4rem;
-      font-weight: 500;
-      letter-spacing: -0.5px;
+      line-height: 1.3;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
       color: var(--text-primary);
-      margin-bottom: 16px;
-      line-height: 1.25;
     }
 
-    header p {
+    .hero p {
       color: var(--text-muted);
       font-size: 1.05rem;
       font-weight: 300;
-      max-width: 600px;
-      margin: 0 auto;
     }
 
-    /* Post list */
+    /* Post Grid */
     .post-grid {
-      display: grid;
-      gap: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .post-card-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
     }
 
     .post-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 32px;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.015);
+      border-radius: 12px;
+      padding: 30px;
+      transition: all 0.25s ease;
     }
 
-    .post-card:hover {
+    .post-card-link:hover .post-card {
+      border-color: #c8d2cb;
       transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(30, 58, 43, 0.06);
-      border-color: #d8e2dc;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     }
 
     .post-date {
       font-size: 0.8rem;
       color: var(--text-muted);
       margin-bottom: 10px;
-      font-weight: 400;
+      font-weight: 500;
       letter-spacing: 0.5px;
     }
 
     .post-title {
       font-size: 1.35rem;
       font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 12px;
       line-height: 1.4;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
     }
 
     .post-desc {
+      font-size: 0.95rem;
       color: var(--text-muted);
-      font-size: 0.96rem;
       font-weight: 300;
       line-height: 1.6;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 0;
-      color: var(--text-muted);
-      font-weight: 300;
     }
 
     footer {
@@ -181,23 +172,25 @@ try {
 </head>
 <body>
   <div class="container">
-    <nav>
-      <div class="brand-logo">VITA</div>
-      <button class="lang-switcher" id="langBtn" onclick="toggleLanguage()">
-        🌐 <span id="btnText">ZH / 中文</span>
-      </button>
-    </nav>
-
-    <header>
-      <span class="hero-tag" id="heroTag">CLINICAL & LONGEVITY RESEARCH</span>
-      <h1 id="heroTitle">Health Science & Precision Longevity</h1>
-      <p id="heroDesc">Translating frontier cellular medicine, circadian biology, and nutritional science into evidence-based longevity strategies.</p>
+    <header class="site-header">
+      <div>
+        <a href="/" class="logo">VITA</a>
+        <div class="subtitle">前沿健康与生命科学智库</div>
+      </div>
+      <button class="lang-toggle" id="globalLangBtn" onclick="toggleGlobalLang()">🌐 ZH / 中文</button>
     </header>
+
+    <section class="hero">
+      <h1 class="lang-en">VITA Research Repository</h1>
+      <h1 class="lang-cn" style="display: none;">VITA 健康生命智库</h1>
+      <p class="lang-en">Evidence-based insights on nutrition, circadian rhythms, autophagy, and longevity science.</p>
+      <p class="lang-cn" style="display: none;">探索科学营养、昼夜节律、细胞自噬与现代抗衰老前沿指南</p>
+    </section>
 
     <main class="post-grid">
       {posts.length === 0 ? (
         <div class="empty-state">
-          <p id="emptyText">Loading research repository...</p>
+          <p>Loading research repository...</p>
         </div>
       ) : (
         posts.map((post) => {
@@ -218,13 +211,12 @@ try {
             descEn = descParts[1].trim();
           }
 
-          const postSlug = (post.slug || post.id).replace(/\.[^/.]+$/, "");
+          // 核心修复：纯净获取 slug 并移除 .md 后缀
+          const rawId = post.slug || post.id || '';
+          const cleanSlug = rawId.replace(/\.[^/.]+$/, "");
 
           return (
-            <a 
-              href={`/blog/${postSlug}/`} 
-              style="text-decoration: none; color: inherit; display: block; cursor: pointer; width: 100%;"
-            >
+            <a href={`/blog/${cleanSlug}`} class="post-card-link">
               <article class="post-card">
                 <div class="post-date">
                   {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}
@@ -242,87 +234,37 @@ try {
     </main>
 
     <footer>
-      <p id="footerText">© 2026 VITA Longevity Institute. All rights reserved.</p>
+      <p>© 2026 VITA Longevity Institute. All rights reserved.</p>
     </footer>
   </div>
 
   <script is:inline>
-    // 语言初始化与切换脚本
-    const i18n = {
-      en: {
-        btnText: "ZH / 中文",
-        heroTag: "CLINICAL & LONGEVITY RESEARCH",
-        heroTitle: "Health Science & Precision Longevity",
-        heroDesc: "Translating frontier cellular medicine, circadian biology, and nutritional science into evidence-based longevity strategies.",
-        emptyText: "Loading research repository...",
-        footerText: "© 2026 VITA Longevity Institute. All rights reserved."
-      },
-      zh: {
-        btnText: "EN / English",
-        heroTag: "前沿健康与生命科学智库",
-        heroTitle: "VITA 健康生命智库",
-        heroDesc: "探索科学营养、昼夜节律、细胞自噬与现代抗衰老前沿指南",
-        emptyText: "正在整理最新健康研究指南...",
-        footerText: "© 2026 VITA 健康生命研究院. 保留所有权利."
-      }
-    };
-
-    let currentLang = 'en'; // 默认英文
-
-    function detectLanguage() {
-      // 1. 优先读取用户之前手动点击保存的语言
-      const savedLang = localStorage.getItem('vita_lang');
-      if (savedLang) {
-        return savedLang;
-      }
-      // 2. 否则自动识别浏览器语言（若是中文环境则默认为 zh，其他地区全为 en）
-      const userLang = navigator.language || navigator.userLanguage;
-      if (userLang && userLang.toLowerCase().startsWith('zh')) {
-        return 'zh';
-      }
-      return 'en';
-    }
-
-    function applyLanguage(lang) {
-      currentLang = lang;
-      localStorage.setItem('vita_lang', lang);
-
-      // 更新 HTML 标签
-      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-
-      // 更新文案
-      const texts = i18n[lang];
-      document.getElementById('btnText').innerText = texts.btnText;
-      document.getElementById('heroTag').innerText = texts.heroTag;
-      document.getElementById('heroTitle').innerText = texts.heroTitle;
-      document.getElementById('heroDesc').innerText = texts.heroDesc;
-      if (document.getElementById('emptyText')) {
-        document.getElementById('emptyText').innerText = texts.emptyText;
-      }
-      document.getElementById('footerText').innerText = texts.footerText;
-
-      // 切换文章列表元素的显示/隐藏
-      const enElems = document.querySelectorAll('.lang-en');
-      const cnElems = document.querySelectorAll('.lang-cn');
+    function formatPageByLang(lang) {
+      const enEls = document.querySelectorAll('.lang-en');
+      const cnEls = document.querySelectorAll('.lang-cn');
+      const btn = document.getElementById('globalLangBtn');
 
       if (lang === 'zh') {
-        enElems.forEach(el => el.style.display = 'none');
-        cnElems.forEach(el => el.style.display = 'block');
+        enEls.forEach(el => el.style.display = 'none');
+        cnEls.forEach(el => el.style.display = 'block');
+        if (btn) btn.innerText = '🌐 EN / English';
       } else {
-        enElems.forEach(el => el.style.display = 'block');
-        cnElems.forEach(el => el.style.display = 'none');
+        enEls.forEach(el => el.style.display = 'block');
+        cnEls.forEach(el => el.style.display = 'none');
+        if (btn) btn.innerText = '🌐 ZH / 中文';
       }
     }
 
-    function toggleLanguage() {
-      const nextLang = currentLang === 'en' ? 'zh' : 'en';
-      applyLanguage(nextLang);
+    let currentLang = localStorage.getItem('vita_lang') || 'en';
+
+    function toggleGlobalLang() {
+      currentLang = currentLang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('vita_lang', currentLang);
+      formatPageByLang(currentLang);
     }
 
-    // 页面加载完成后自动应用检测到的语言
     document.addEventListener('DOMContentLoaded', () => {
-      const initialLang = detectLanguage();
-      applyLanguage(initialLang);
+      formatPageByLang(currentLang);
     });
   </script>
 </body>
