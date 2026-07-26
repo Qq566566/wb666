@@ -218,9 +218,11 @@ if (fullTitle.includes('|')) {
   </div>
 
   <script is:inline>
-    // 检查元素是否包含中文字符
-    function containsChinese(str) {
-      return /[\u4e00-\u9fa5]/.test(str);
+    // 计算一段文字中汉字所占的比例
+    function getChineseRatio(str) {
+      if (!str) return 0;
+      const chineseChars = str.match(/[\u4e00-\u9fa5]/g) || [];
+      return chineseChars.length / str.length;
     }
 
     // 智能切分正文中的中英文段落
@@ -233,17 +235,18 @@ if (fullTitle.includes('|')) {
         const text = el.innerText.trim();
         if (!text) return;
 
-        const isCn = containsChinese(text);
+        const ratio = getChineseRatio(text);
+
         if (lang === 'zh') {
-          // 切换至中文模式：隐藏纯英文段落
-          if (!isCn && text.length > 5) {
+          // 切换至中文模式：隐藏纯英文段落（汉字比例几乎为 0 且字数较长的段落）
+          if (ratio < 0.05 && text.length > 10) {
             el.style.display = 'none';
           } else {
             el.style.display = '';
           }
         } else {
-          // 切换至英文模式：隐藏中文段落
-          if (isCn) {
+          // 切换至英文模式：隐藏主要为中文的段落（汉字比例超过 15% 的段落）
+          if (ratio > 0.15) {
             el.style.display = 'none';
           } else {
             el.style.display = '';
@@ -251,7 +254,7 @@ if (fullTitle.includes('|')) {
         }
       });
 
-      // 切换大标题与切换按钮文案
+      // 切换主标题与按钮文案
       const enTitles = document.querySelectorAll('h1.lang-en');
       const cnTitles = document.querySelectorAll('h1.lang-cn');
       const btn = document.getElementById('langBtn');
