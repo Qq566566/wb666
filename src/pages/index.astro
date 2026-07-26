@@ -219,9 +219,12 @@ try {
             descEn = descParts[1].trim();
           }
 
+          // 核心修复：兼容新版 Astro，优先取 slug，若无则取去除 .md 后缀的 id
+          const postSlug = post.slug || post.id.replace(/\.[^/.]+$/, "");
+
           return (
             <a 
-              href={`/blog/${post.slug}/`} 
+              href={`/blog/${postSlug}`} 
               style="text-decoration: none; color: inherit; display: block; width: 100%; cursor: pointer;"
             >
               <article class="post-card">
