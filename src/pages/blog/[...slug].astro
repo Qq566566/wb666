@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{post.data.title} | VITA</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.8;
+        color: #2d3748;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        background-color: #fcfcfc;
+      }
+      .back-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #4a5568;
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      .back-link:hover { color: #000; }
+      h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #1a202c; }
+      .date { color: #718096; font-size: 0.9rem; margin-bottom: 2rem; }
+      .content { font-size: 1.05rem; }
+      .content h2 { margin-top: 2rem; border-bottom: 1px solid #edf2f7; padding-bottom: 0.5rem; }
+      .content p { margin: 1.2rem 0; }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="back-link">← 返回首页</a>
+    <article>
+      <h1>{post.data.title}</h1>
+      <div class="date">{post.data.pubDate}</div>
+      <div class="content">
+        <Content />
+      </div>
+    </article>
+  </body>
+</html>
