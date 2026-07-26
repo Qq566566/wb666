@@ -2,43 +2,42 @@ name: Daily AI Post Generation
 
 on:
   schedule:
-    # 每天北京时间早上 8:00（UTC 0:00）自动运行
-    - cron: '0 0 * * *'
-  workflow_dispatch: # 支持手动触发
+    # 每天配置 7 个分散的时间点触发检查（UTC时间，约对应北京时间 09:00 - 23:00）
+    - cron: '18 1 * * *'   # 约 09:18
+    - cron: '42 3 * * *'   # 约 11:42
+    - cron: '15 6 * * *'   # 约 14:15
+    - cron: '50 8 * * *'   # 约 16:50
+    - cron: '22 11 * * *'  # 约 19:22
+    - cron: '08 13 * * *'  # 约 21:08
+    - cron: '35 15 * * *'  # 约 23:35
+  workflow_dispatch: # 保留手动触发按钮
 
 jobs:
   build-and-post:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r scripts/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
 
-    - name: Run AI Auto Post Agent
-      env:
-        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      run: |
-        python scripts/auto_post.py
+      - name: Run AI Auto Post Agent
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: python scripts/auto_post.py
 
-    - name: Commit and Push changes
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add src/content/blog/
-        
-        if git diff --staged --quiet; then
-          echo "No new post generated."
-        else
-          git commit -m "docs: publish daily health research post"
-          git push
-        fi
+      - name: Commit and push if changed
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/
+          # 如果本次没生成新文件（例如跳过或超上限），自动跳过 commit，不触发无用构建
+          git diff --staged --quiet || (git commit -m "docs: publish daily health research post" && git push)
