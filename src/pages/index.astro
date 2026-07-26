@@ -220,16 +220,18 @@ try {
           }
 
           return (
-            <article class="post-card">
-              <div class="post-date">
-                {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}
-              </div>
-              <h2 class="post-title lang-en">{titleEn}</h2>
-              <h2 class="post-title lang-cn" style="display: none;">{titleCn}</h2>
-              
-              <p class="post-desc lang-en">{descEn}</p>
-              <p class="post-desc lang-cn" style="display: none;">{descCn}</p>
-            </article>
+            <a href={`/blog/${post.slug}`} style="text-decoration: none; color: inherit; display: block;">
+              <article class="post-card">
+                <div class="post-date">
+                  {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}
+                </div>
+                <h2 class="post-title lang-en">{titleEn}</h2>
+                <h2 class="post-title lang-cn" style="display: none;">{titleCn}</h2>
+                
+                <p class="post-desc lang-en">{descEn}</p>
+                <p class="post-desc lang-cn" style="display: none;">{descCn}</p>
+              </article>
+            </a>
           );
         })
       )}
