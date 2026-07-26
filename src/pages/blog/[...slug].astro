@@ -48,7 +48,7 @@ if (fullTitle.includes('|')) {
       background-color: var(--bg-color);
       color: var(--text-primary);
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.8;
+      line-height: 1.85;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -110,7 +110,6 @@ if (fullTitle.includes('|')) {
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 14px;
-      letter-spacing: 0.5px;
     }
 
     h1 {
@@ -126,7 +125,6 @@ if (fullTitle.includes('|')) {
       font-size: 1.08rem;
       color: #2c3531;
       font-weight: 300;
-      line-height: 1.85;
     }
 
     .article-content h2 {
@@ -134,7 +132,6 @@ if (fullTitle.includes('|')) {
       font-weight: 600;
       margin: 40px 0 16px 0;
       color: var(--text-primary);
-      letter-spacing: -0.3px;
     }
 
     .article-content h3 {
@@ -164,25 +161,6 @@ if (fullTitle.includes('|')) {
       font-style: italic;
       background: rgba(30, 58, 43, 0.02);
       border-radius: 0 8px 8px 0;
-    }
-
-    .article-content table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 30px 0;
-      font-size: 0.95rem;
-    }
-
-    .article-content th, .article-content td {
-      padding: 12px 16px;
-      border: 1px solid var(--border-color);
-      text-align: left;
-    }
-
-    .article-content th {
-      background: var(--accent-light);
-      color: var(--accent-color);
-      font-weight: 600;
     }
 
     footer {
@@ -218,31 +196,27 @@ if (fullTitle.includes('|')) {
   </div>
 
   <script is:inline>
-    // 优雅平滑的语言切换逻辑：只在显示层做类名切换，不破坏 DOM 结构与点击事件
     function formatArticleByLang(lang) {
-      const container = document.getElementById('articleBody');
-      if (!container) return;
-
-      // 切换主标题
+      const enBlock = document.querySelector('.lang-block.lang-en');
+      const cnBlock = document.querySelector('.lang-block.lang-cn');
+      
       const enTitles = document.querySelectorAll('h1.lang-en');
       const cnTitles = document.querySelectorAll('h1.lang-cn');
       const btn = document.getElementById('langBtn');
 
       if (lang === 'zh') {
+        if (enBlock) enBlock.style.display = 'none';
+        if (cnBlock) cnBlock.style.display = 'block';
         enTitles.forEach(el => el.style.display = 'none');
         cnTitles.forEach(el => el.style.display = 'block');
         if (btn) btn.innerText = '🌐 EN / English';
       } else {
+        if (enBlock) enBlock.style.display = 'block';
+        if (cnBlock) cnBlock.style.display = 'none';
         enTitles.forEach(el => el.style.display = 'block');
         cnTitles.forEach(el => el.style.display = 'none');
         if (btn) btn.innerText = '🌐 ZH / 中文';
       }
-
-      // 保证正文内所有元素保持正常 display（避免误隐藏导致的点击失效）
-      const elements = container.querySelectorAll('h2, h3, p, li, blockquote');
-      elements.forEach(el => {
-        el.style.display = '';
-      });
     }
 
     let currentDetailLang = localStorage.getItem('vita_lang') || 'en';
