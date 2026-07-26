@@ -4,7 +4,6 @@ import { getCollection, render } from 'astro:content';
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
   return posts.map((post) => ({
-    // 在 Astro 5.0 glob loader 中，post.id 即为文件名（不含 .md）
     params: { slug: post.id },
     props: { post },
   }));
@@ -12,6 +11,15 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+
+// 处理标题，提取中英文
+const fullTitle = post.data.title || '';
+let titleCn = fullTitle, titleEn = fullTitle;
+if (fullTitle.includes('|')) {
+  const parts = fullTitle.split('|');
+  titleCn = parts[0].trim();
+  titleEn = parts[1].trim();
+}
 ---
 
 <!DOCTYPE html>
@@ -19,10 +27,10 @@ const { Content } = await render(post);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{post.data.title} | VITA</title>
+  <title>{titleEn} | VITA Longevity</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-color: #fbfbf9;
@@ -31,6 +39,7 @@ const { Content } = await render(post);
       --text-muted: #64746b;
       --border-color: #eaedea;
       --accent-color: #1e3a2b;
+      --accent-light: #f0f4f1;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,11 +55,17 @@ const { Content } = await render(post);
     .container {
       max-width: 760px;
       margin: 0 auto;
-      padding: 40px 24px 80px 24px;
+      padding: 40px 24px 100px 24px;
     }
 
+    /* Top Nav */
     nav {
-      margin-bottom: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 50px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .back-btn {
@@ -59,7 +74,7 @@ const { Content } = await render(post);
       gap: 6px;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 500;
       transition: color 0.2s;
     }
@@ -68,6 +83,23 @@ const { Content } = await render(post);
       color: var(--accent-color);
     }
 
+    .lang-switcher {
+      background: var(--accent-light);
+      border: 1px solid #d8e2dc;
+      color: var(--accent-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-switcher:hover {
+      background: #e2ebe5;
+    }
+
+    /* Header */
     header {
       margin-bottom: 40px;
       padding-bottom: 30px;
@@ -77,40 +109,47 @@ const { Content } = await render(post);
     .post-date {
       font-size: 0.85rem;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 2.1rem;
       font-weight: 600;
-      line-height: 1.3;
+      line-height: 1.35;
       color: var(--text-primary);
+      letter-spacing: -0.5px;
     }
 
+    /* Clean Article Body Formatting */
     .article-content {
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       color: #2c3531;
+      font-weight: 300;
+      line-height: 1.85;
     }
 
     .article-content h2 {
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 600;
-      margin: 36px 0 16px 0;
+      margin: 40px 0 16px 0;
       color: var(--text-primary);
+      letter-spacing: -0.3px;
     }
 
     .article-content h3 {
       font-size: 1.2rem;
       font-weight: 600;
-      margin: 28px 0 12px 0;
+      margin: 30px 0 12px 0;
+      color: var(--text-primary);
     }
 
     .article-content p {
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
 
     .article-content ul, .article-content ol {
-      margin: 0 0 20px 24px;
+      margin: 0 0 24px 24px;
     }
 
     .article-content li {
@@ -119,27 +158,126 @@ const { Content } = await render(post);
 
     .article-content blockquote {
       border-left: 3px solid var(--accent-color);
-      padding-left: 16px;
-      margin: 24px 0;
+      padding: 8px 0 8px 20px;
+      margin: 28px 0;
       color: var(--text-muted);
       font-style: italic;
+      background: rgba(30, 58, 43, 0.02);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .article-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 30px 0;
+      font-size: 0.95rem;
+    }
+
+    .article-content th, .article-content td {
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .article-content th {
+      background: var(--accent-light);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 80px;
+      padding-top: 30px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <nav>
-      <a href="/" class="back-btn">← Back to Home / 返回首页</a>
+      <a href="/" class="back-btn">← Back to Research Repository / 返回智库首页</a>
+      <button class="lang-switcher" id="langBtn" onclick="toggleArticleLang()">🌐 ZH / 中文</button>
     </nav>
 
     <header>
-      <div class="post-date">{post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : ''}</div>
-      <h1>{post.data.title}</h1>
+      <div class="post-date">{post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}</div>
+      <h1 class="lang-en">{titleEn}</h1>
+      <h1 class="lang-cn" style="display: none;">{titleCn}</h1>
     </header>
 
-    <article class="article-content">
+    <article class="article-content" id="articleBody">
       <Content />
     </article>
+
+    <footer>
+      <p>© 2026 VITA Longevity Institute. All rights reserved.</p>
+    </footer>
   </div>
+
+  <script is:inline>
+    // 检查元素是否包含中文字符
+    function containsChinese(str) {
+      return /[\u4e00-\u9fa5]/.test(str);
+    }
+
+    // 智能切分正文中的中英文段落
+    function formatArticleByLang(lang) {
+      const container = document.getElementById('articleBody');
+      if (!container) return;
+
+      const elements = container.querySelectorAll('h2, h3, p, li, blockquote');
+      elements.forEach(el => {
+        const text = el.innerText.trim();
+        if (!text) return;
+
+        const isCn = containsChinese(text);
+        if (lang === 'zh') {
+          // 切换至中文模式：隐藏纯英文段落
+          if (!isCn && text.length > 5) {
+            el.style.display = 'none';
+          } else {
+            el.style.display = '';
+          }
+        } else {
+          // 切换至英文模式：隐藏中文段落
+          if (isCn) {
+            el.style.display = 'none';
+          } else {
+            el.style.display = '';
+          }
+        }
+      });
+
+      // 切换大标题与切换按钮文案
+      const enTitles = document.querySelectorAll('h1.lang-en');
+      const cnTitles = document.querySelectorAll('h1.lang-cn');
+      const btn = document.getElementById('langBtn');
+
+      if (lang === 'zh') {
+        enTitles.forEach(el => el.style.display = 'none');
+        cnTitles.forEach(el => el.style.display = 'block');
+        if (btn) btn.innerText = '🌐 EN / English';
+      } else {
+        enTitles.forEach(el => el.style.display = 'block');
+        cnTitles.forEach(el => el.style.display = 'none');
+        if (btn) btn.innerText = '🌐 ZH / 中文';
+      }
+    }
+
+    let currentDetailLang = localStorage.getItem('vita_lang') || 'en';
+
+    function toggleArticleLang() {
+      currentDetailLang = currentDetailLang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('vita_lang', currentDetailLang);
+      formatArticleByLang(currentDetailLang);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      formatArticleByLang(currentDetailLang);
+    });
+  </script>
 </body>
 </html>
