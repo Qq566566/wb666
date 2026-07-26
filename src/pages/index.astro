@@ -201,7 +201,6 @@ try {
         </div>
       ) : (
         posts.map((post) => {
-          // 拆分标题与描述中的【中文】与【英文】部分
           const fullTitle = post.data.title || '';
           const fullDesc = post.data.description || '';
           
@@ -219,12 +218,9 @@ try {
             descEn = descParts[1].trim();
           }
 
-          // 核心修复：兼容新版 Astro，优先取 slug，若无则取去除 .md 后缀的 id
-          const postSlug = post.slug || post.id.replace(/\.[^/.]+$/, "");
-
           return (
             <a 
-              href={`/blog/${postSlug}`} 
+              href={`/blog/${post.id}/`} 
               style="text-decoration: none; color: inherit; display: block; width: 100%; cursor: pointer;"
             >
               <article class="post-card">
