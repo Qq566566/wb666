@@ -3,8 +3,13 @@ import random
 import datetime
 from openai import OpenAI
 
+# 获取 API Key
+api_key = os.environ.get("DEEPSEEK_API_KEY")
+if not api_key:
+    raise ValueError("未找到 DEEPSEEK_API_KEY 环境变量，请检查 GitHub Secrets 配置！")
+
 client = OpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY"),
+    api_key=api_key,
     base_url="https://api.deepseek.com"
 )
 
@@ -23,7 +28,7 @@ TOPICS = [
         "en": "Intermittent Fasting & Autophagy: The Science Behind Anti-Aging and Metabolic Health"
     },
     {
-        "cn": "办公族“隐性疲劳”解法：如何通过微运动快速恢复大脑精力",
+        "cn": "办公族隐性疲劳解法：如何通过微运动快速恢复大脑精力",
         "en": "Combating Brain Fog: Micro-Movement Strategies for Office Professionals"
     },
     {
@@ -42,7 +47,7 @@ def generate_article():
     
     prompt = f"""
 你是一位顶级的健康医学科普作家与抗衰老研究学者。
-请围绕主题《{topic_pair['cn']}》/ "{topic_pair['en']}" 撰写一篇深度、客观且通俗易懂的**中英双语**健康研究博客文章。
+请围绕主题《{topic_pair['cn']}》/ "{topic_pair['en']}" 撰写一篇深度、客观且通俗易懂的 Markdown 健康研究博客文章。
 
 要求如下：
 1. 顶部必须包含 Front Matter 元数据，标题与摘要需体现中英双语，格式严格如下：
@@ -54,7 +59,7 @@ pubDate: "{today}"
 
 2. 正文结构要求：
 - 使用标准的 Markdown 格式（##, ### 标题，列表，加粗等）
-- 内容采用**中英对照或段落双语形式**（例如：每个小标题和核心观点均有中文与英文对照翻译）
+- 内容采用中英对照或段落双语形式（每个小标题和核心观点均有中文与英文对照翻译）
 - 结构清晰：引言（科学原理） -> 核心机制分析 -> 可落地的日常实操建议 -> 总结
 - 语气严谨、专业、富有启发性，总字数在 1500 - 2000 字之间。
 - 切勿出现“AI生成”、“智能体编写”、“大模型”等任何机器生成痕迹，直接返回纯粹的博客文章。
@@ -80,10 +85,12 @@ pubDate: "{today}"
         content = content[:-3]
     content = content.strip()
 
+    # 创建保存目录与文件名
     filename = f"{today}-{random.randint(1000, 9999)}.md"
-    file_path = os.path.join("src", "content", "blog", filename)
+    target_dir = os.path.join("src", "content", "blog")
+    os.makedirs(target_dir, exist_ok=True)
     
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    file_path = os.path.join(target_dir, filename)
     
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
