@@ -1,19 +1,17 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map((post) => {
-    const slug = post.slug || post.id.replace(/\.[^/.]+$/, "");
-    return {
-      params: { slug },
-      props: { post },
-    };
-  });
+  return posts.map((post) => ({
+    // 在 Astro 5.0 glob loader 中，post.id 即为文件名（不含 .md）
+    params: { slug: post.id },
+    props: { post },
+  }));
 }
 
 const { post } = Astro.props;
-const { Content } = await post.render();
+const { Content } = await render(post);
 ---
 
 <!DOCTYPE html>
@@ -89,7 +87,6 @@ const { Content } = await post.render();
       color: var(--text-primary);
     }
 
-    /* Markdown 正文样式 */
     .article-content {
       font-size: 1.05rem;
       color: #2c3531;
