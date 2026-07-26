@@ -1,6 +1,7 @@
 import os
 import random
 import datetime
+import sys
 import re
 from openai import OpenAI
 
@@ -52,18 +53,10 @@ pubDate: "{today}"
     return yaml_header
 
 def get_today_target_and_count(target_dir):
-    """
-    1. 根据今天日期确定今天随机生成的目标总篇数 (1 ~ 5 篇)
-    2. 统计今天已经生成的文章数量
-    """
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    
-    # 用当天日期做随机种子，保证“今天”的目标篇数固定（到了“明天”会自动重新随机 1~5 篇）
     seed_value = int(today_str.replace("-", ""))
     random.seed(seed_value)
-    daily_target = random.randint(1, 5) # 随机 1 到 5 篇
-    
-    # 恢复系统的真随机
+    daily_target = random.randint(1, 5) # 每日随机 1 到 5 篇
     random.seed()
 
     if not os.path.exists(target_dir):
@@ -75,21 +68,19 @@ def get_today_target_and_count(target_dir):
 def generate_article():
     target_dir = os.path.join("src", "content", "blog")
     
-    # 1. 获取今天的目标总数和已生成数量
-    daily_target, current_count = get_today_target_and_count(target_dir)
-    print(f"今日随机分配配额: {daily_target} 篇 | 当前已发布: {current_count} 篇")
+    # 检查是否为 GitHub Actions 中的手动触发 (workflow_dispatch)
+    is_manual = os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
 
-    # 2. 如果已经达到今天的随机上限，直接退出
-    if current_count >= daily_target:
-        print(f"已达到今日随机发布上限 ({daily_target} 篇)，本次运行跳过。")
-        return
+    if is_manual:
+        print("⚡ [手动触发模式] 忽略每日配额限制，强制生成 1 篇新文章！")
+    else:
+        daily_target, current_count = get_today_target_and_count(target_dir)
+        print(f"🤖 [定时任务模式] 今日配额: {daily_target} 篇 | 当前已发布: {current_count} 篇")
+        if current_count >= daily_target:
+            print(f"已达今日定时发布上限 ({daily_target} 篇)，本次跳过。")
+            return
 
-    # 3. 增加随机概率波动（例如 60% 概率生成），让发布时间点更加分散自然
-    if random.random() > 0.6:
-        print("随机抽查未命中（本次概率跳过），等待下一次触发。")
-        return
-
-    print("=== 开始通过 DeepSeek 撰写双语分离精品质感健康文章 ===")
+    print("=== 开始通过 DeepSeek 撰写双语文章 ===")
 
     topic_pair = random.choice(TOPICS)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -115,13 +106,11 @@ def generate_article():
     
     raw_content = response.choices[0].message.content.strip()
 
-    # 摘要生成
     desc_cn = "深入剖析健康机制与前沿科学，提供切实可行的日常改善策略。"
     desc_en = "Exploring health mechanics and cutting-edge science, providing actionable lifestyle strategies."
 
     yaml_header = clean_yaml_frontmatter(topic_pair['cn'], topic_pair['en'], desc_cn, desc_en, today)
     
-    # 解析并用 HTML div 包裹英文区与中文区，彻底实现结构分离
     en_body = ""
     cn_body = ""
     
@@ -137,7 +126,7 @@ def generate_article():
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    # 保存文件
+    # 文件名生成
     filename = f"{today}-{random.randint(1000, 9999)}.md"
     os.makedirs(target_dir, exist_ok=True)
     file_path = os.path.join(target_dir, filename)
