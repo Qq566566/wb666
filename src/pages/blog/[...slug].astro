@@ -3,10 +3,13 @@ import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
+  return posts.map((post) => {
+    const slug = post.slug || post.id.replace(/\.[^/.]+$/, "");
+    return {
+      params: { slug },
+      props: { post },
+    };
+  });
 }
 
 const { post } = Astro.props;
