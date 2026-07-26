@@ -1,19 +1,18 @@
 import os
 import random
 import datetime
+import re
 from openai import OpenAI
 
-# 获取 API Key
 api_key = os.environ.get("DEEPSEEK_API_KEY")
 if not api_key:
-    raise ValueError("未找到 DEEPSEEK_API_KEY 环境变量，请检查 GitHub Secrets 配置！")
+    raise ValueError("未找到 DEEPSEEK_API_KEY 环境变量！")
 
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
 )
 
-# 专注于大健康、抗衰、睡眠与科学养生的双语 SEO 主题库
 TOPICS = [
     {
         "cn": "昼夜节律与深度睡眠：如何通过光照调节提升身体自我修复力",
@@ -41,6 +40,19 @@ TOPICS = [
     }
 ]
 
+def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
+    """强制生成绝对符合规范的 YAML Front Matter，防止语法报错"""
+    # 清理双引号与多余空格
+    clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
+    clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
+    
+    yaml_header = f"""---
+title: "{clean_title}"
+description: "{clean_desc}"
+pubDate: "{today}"
+---"""
+    return yaml_header
+
 def generate_article():
     topic_pair = random.choice(TOPICS)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -49,21 +61,12 @@ def generate_article():
 你是一位顶级的健康医学科普作家与抗衰老研究学者。
 请围绕主题《{topic_pair['cn']}》/ "{topic_pair['en']}" 撰写一篇深度、客观且通俗易懂的 Markdown 健康研究博客文章。
 
-要求如下：
-1. 顶部必须包含 Front Matter 元数据，标题与摘要需体现中英双语，格式严格如下：
----
-title: "{topic_pair['cn']} | {topic_pair['en']}"
-description: "【中文摘要】100字左右的深度内容概述。【English Summary】A brief 1-2 sentence overview."
-pubDate: "{today}"
----
-
-2. 正文结构要求：
-- 使用标准的 Markdown 格式（##, ### 标题，列表，加粗等）
-- 内容采用中英对照或段落双语形式（每个小标题和核心观点均有中文与英文对照翻译）
-- 结构清晰：引言（科学原理） -> 核心机制分析 -> 可落地的日常实操建议 -> 总结
-- 语气严谨、专业、富有启发性，总字数在 1500 - 2000 字之间。
-- 切勿出现“AI生成”、“智能体编写”、“大模型”等任何机器生成痕迹，直接返回纯粹的博客文章。
-- 不要输出额外的解释性文字，直接返回 Front Matter + Markdown 正文。
+正文结构要求：
+1. 请勿输出 Front Matter (---)，直接从正文一级标题开始写。
+2. 使用标准的 Markdown 格式（##, ### 标题，列表，加粗等）
+3. 内容采用中英对照或段落双语形式（每个小标题和核心观点均有中文与英文对照翻译）
+4. 结构清晰：引言 -> 核心机制分析 -> 可落地的日常实操建议 -> 总结
+5. 语气严谨专业，总字数在 1500 - 2000 字之间，切勿出现“AI生成”、“智能体”等痕迹。
 """
 
     print(f"正在撰写双语健康研究文章: {topic_pair['cn']} ...")
@@ -74,18 +77,26 @@ pubDate: "{today}"
         temperature=0.7,
     )
     
-    content = response.choices[0].message.content.strip()
+    body_content = response.choices[0].message.content.strip()
     
-    # 清理多余的代码块标记
-    if content.startswith("```markdown"):
-        content = content[11:]
-    if content.startswith("```"):
-        content = content[3:]
-    if content.endswith("```"):
-        content = content[:-3]
-    content = content.strip()
+    # 清理代码块标记
+    if body_content.startswith("```markdown"):
+        body_content = body_content[11:]
+    if body_content.startswith("```"):
+        body_content = body_content[3:]
+    if body_content.endswith("```"):
+        body_content = body_content[:-3]
+    body_content = body_content.strip()
 
-    # 创建保存目录与文件名
+    # 简易摘要生成
+    desc_cn = "深入剖析健康机制与前沿科学，提供切实可行的日常改善策略。"
+    desc_en = "Exploring health mechanics and cutting-edge science, providing actionable lifestyle strategies."
+
+    # 拼装安全的 YAML 头
+    yaml_header = clean_yaml_frontmatter(topic_pair['cn'], topic_pair['en'], desc_cn, desc_en, today)
+    final_content = f"{yaml_header}\n\n{body_content}"
+
+    # 保存文件
     filename = f"{today}-{random.randint(1000, 9999)}.md"
     target_dir = os.path.join("src", "content", "blog")
     os.makedirs(target_dir, exist_ok=True)
@@ -93,7 +104,7 @@ pubDate: "{today}"
     file_path = os.path.join(target_dir, filename)
     
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
+        f.write(final_content)
         
     print(f"成功保存文章至: {file_path}")
 
