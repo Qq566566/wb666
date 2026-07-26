@@ -218,9 +218,11 @@ try {
             descEn = descParts[1].trim();
           }
 
+          const postSlug = (post.slug || post.id).replace(/\.[^/.]+$/, "");
+
           return (
             <a 
-              href={`/blog/${post.id}`} 
+              href={`/blog/${postSlug}/`} 
               style="text-decoration: none; color: inherit; display: block; cursor: pointer; width: 100%;"
             >
               <article class="post-card">
