@@ -41,8 +41,6 @@ TOPICS = [
 ]
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
-    """强制生成绝对符合规范的 YAML Front Matter，防止语法报错"""
-    # 清理双引号与多余空格
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
@@ -59,14 +57,15 @@ def generate_article():
     
     prompt = f"""
 你是一位顶级的健康医学科普作家与抗衰老研究学者。
-请围绕主题《{topic_pair['cn']}》/ "{topic_pair['en']}" 撰写一篇深度、客观且通俗易懂的 Markdown 健康研究博客文章。
+请围绕主题《{topic_pair['cn']}》/ "{topic_pair['en']}" 撰写一篇深度博客文章。
 
-正文结构要求：
-1. 请勿输出 Front Matter (---)，直接从正文一级标题开始写。
-2. 使用标准的 Markdown 格式（##, ### 标题，列表，加粗等）
-3. 内容采用中英对照或段落双语形式（每个小标题和核心观点均有中文与英文对照翻译）
-4. 结构清晰：引言 -> 核心机制分析 -> 可落地的日常实操建议 -> 总结
-5. 语气严谨专业，总字数在 1500 - 2000 字之间，切勿出现“AI生成”、“智能体”等痕迹。
+请严格按照以下格式输出（切勿混杂，必须包含两个明确的分隔标记线）：
+
+=== ENGLISH SECTION ===
+(这里只用纯英文撰写完整的文章，从一级/二级标题开始，包括：Introduction, Core Mechanisms, Actionable Recommendations, Conclusion。全程不出现任何中文汉字。)
+
+=== CHINESE SECTION ===
+(这里只用纯中文撰写完整的文章，从一级/二级标题开始，包括：引言、核心机制、实操建议、总结。全程不出现任何英文字段，排版清晰。)
 """
 
     print(f"正在撰写双语健康研究文章: {topic_pair['cn']} ...")
@@ -77,24 +76,29 @@ def generate_article():
         temperature=0.7,
     )
     
-    body_content = response.choices[0].message.content.strip()
-    
-    # 清理代码块标记
-    if body_content.startswith("```markdown"):
-        body_content = body_content[11:]
-    if body_content.startswith("```"):
-        body_content = body_content[3:]
-    if body_content.endswith("```"):
-        body_content = body_content[:-3]
-    body_content = body_content.strip()
+    raw_content = response.choices[0].message.content.strip()
 
     # 简易摘要生成
     desc_cn = "深入剖析健康机制与前沿科学，提供切实可行的日常改善策略。"
     desc_en = "Exploring health mechanics and cutting-edge science, providing actionable lifestyle strategies."
 
-    # 拼装安全的 YAML 头
     yaml_header = clean_yaml_frontmatter(topic_pair['cn'], topic_pair['en'], desc_cn, desc_en, today)
-    final_content = f"{yaml_header}\n\n{body_content}"
+    
+    # 解析并用 HTML div 包裹英文区与中文区，彻底实现完美分离
+    en_body = ""
+    cn_body = ""
+    
+    if "=== CHINESE SECTION ===" in raw_content:
+        parts = raw_content.split("=== CHINESE SECTION ===")
+        en_part = parts[0].replace("=== ENGLISH SECTION ===", "").strip()
+        cn_part = parts[1].strip()
+        
+        en_body = f'<div class="lang-block lang-en">\n\n{en_part}\n\n</div>'
+        cn_body = f'<div class="lang-block lang-cn" style="display: none;">\n\n{cn_part}\n\n</div>'
+    else:
+        en_body = f'<div class="lang-block lang-en">\n\n{raw_content}\n\n</div>'
+
+    final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
     # 保存文件
     filename = f"{today}-{random.randint(1000, 9999)}.md"
