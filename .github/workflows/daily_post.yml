@@ -2,9 +2,9 @@ name: Daily AI Post Generation
 
 on:
   schedule:
-    # 每天北京时间早上 8:00（UTC 0:00）运行
+    # 每天北京时间早上 8:00（UTC 0:00）自动运行
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允许手动点击触发
+  workflow_dispatch: # 支持手动触发
 
 jobs:
   build-and-post:
@@ -39,6 +39,6 @@ jobs:
         if git diff --staged --quiet; then
           echo "No new post generated."
         else
-          git commit -m "chore: git commit -m "docs: publish daily health research post [skip ci]"
+          git commit -m "docs: publish daily health research post [skip ci]"
           git push
         fi
