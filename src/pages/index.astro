@@ -3,45 +3,41 @@ import { getCollection } from 'astro:content';
 
 let posts = [];
 try {
-	posts = (await getCollection('blog')).sort(
-		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-	);
+  posts = (await getCollection('blog')).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+  );
 } catch (e) {
-	console.error(e);
+  console.error(e);
 }
 ---
 
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>我的 AI 自动化 SEO 博客</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我的 AI 自动化 SEO 博客</title>
 </head>
-<body style="max-width: 800px; margin: 0 auto; padding: 40px 20px; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #333;">
-	<header style="margin-bottom: 40px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px;">
-		<h1 style="margin: 0 0 10px 0; color: #111;">🚀 AI 自动化 SEO 博客</h1>
-		<p style="margin: 0; color: #666;">每天由智能体自动深度写作并发布最新的科技与 SEO 文章</p>
-	</header>
-	
-	<main>
-		{posts.length === 0 ? (
-			<p>暂无文章，等待自动更新...</p>
-		) : (
-			<div style="display: flex; flex-direction: column; gap: 30px;">
-				{posts.map((post) => (
-					<article style="border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; background: #fff;">
-						<h2 style="margin: 0 0 10px 0; color: #111;">
-							{post.data.title}
-						</h2>
-						<div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
-							发布日期: {post.data.pubDate.toISOString().split('T')[0]}
-						</div>
-						<p style="margin: 0 0 16px 0; color: #4b5563;">{post.data.description}</p>
-					</article>
-				))}
-			</div>
-		)}
-	</main>
+<body style="max-width: 800px; margin: 0 auto; padding: 40px 20px; font-family: system-ui, sans-serif; line-height: 1.6;">
+  <header style="margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
+    <h1>🚀 AI 自动化 SEO 博客</h1>
+    <p>每天由智能体自动更新</p>
+  </header>
+  
+  <main>
+    {posts.length === 0 ? (
+      <p>暂无文章，等待自动生成...</p>
+    ) : (
+      <ul style="list-style: none; padding: 0;">
+        {posts.map((post) => (
+          <li style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2>{post.data.title}</h2>
+            <p style="color: #666; font-size: 0.9em;">发布日期: {post.data.pubDate.toISOString().split('T')[0]}</p>
+            <p>{post.data.description}</p>
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
 </body>
 </html>
