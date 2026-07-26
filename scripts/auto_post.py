@@ -3,27 +3,26 @@ import random
 import datetime
 from openai import OpenAI
 
-# 1. 设置 API Key
+# 1. 配置 DeepSeek API 端点
 client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    # 如果使用 DeepSeek 等兼容 OpenAI 格式的服务，可以配置 base_url：
-    # base_url="https://api.deepseek.com"
+    api_key=os.environ.get("DEEPSEEK_API_KEY"),
+    base_url="https://api.deepseek.com"  # 指向 DeepSeek 官方接口
 )
 
-# 2. 备选 SEO 主题库（你可以自行丰富这个列表，或者让 AI 自动选题）
+# 2. 备选 SEO 主题库
 TOPICS = [
     "2026年个人博客如何优化SEO并提升 Google 排名",
     "静态网站生成器对比：Astro vs Hugo vs Hexo",
     "为什么全自动 AI 建站是未来的趋势",
     "如何利用 Serverless 架构实现零成本网站托管",
-    "新手搭建个人网站需要避开的 5 个坑"
+    "新手搭建个人网站需要避开的 5 个坑",
+    "DeepSeek 在自动化内容生成中的实战指南"
 ]
 
 def generate_article():
     topic = random.choice(TOPICS)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     
-    # 提示词设计：强约束输出格式，保证 Astro 能完美解析 Front Matter
     prompt = f"""
 你是一位资深的 SEO 内容专家和科技博主。
 请围绕主题《{topic}》写一篇深度 Markdown 博客文章。
@@ -34,20 +33,19 @@ def generate_article():
 title: "文章标题"
 description: "150字以内的文章摘要，用于SEO"
 pubDate: "{today}"
-heroImage: "/blog-placeholder-1.jpg"
 ---
 
 2. 正文要求：
 - 使用标准的 Markdown 格式（使用 ##, ### 标题，列表，粗体等）
 - 结构清晰，包含背景、核心观点、实操建议、总结
-- 内容通顺自然，注重价值输出，避免无意义的废话，字数在 1200-2000 字之间。
-- 不要输出额外的解释性文字，直接返回 Front Matter + 文章内容。
+- 内容通顺自然，字数在 1000-1800 字之间。
+- 不要输出额外的解释性文字或 ```markdown 包裹符，直接返回 Front Matter + 文章正文。
 """
 
-    print(f"正在生成主题文章: {topic} ...")
+    print(f"正在使用 DeepSeek 生成主题文章: {topic} ...")
     
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  # 或 deepseek-chat 等高性价比模型
+        model="deepseek-chat",  # 使用 DeepSeek V3 模型，性价比极高
         messages=[
             {"role": "user", "content": prompt}
         ],
@@ -56,7 +54,7 @@ heroImage: "/blog-placeholder-1.jpg"
     
     content = response.choices[0].message.content.strip()
     
-    # 清理可能多余的 ```markdown 包裹符
+    # 清理多余的代码块标记
     if content.startswith("```markdown"):
         content = content[11:]
     if content.startswith("```"):
@@ -69,7 +67,6 @@ heroImage: "/blog-placeholder-1.jpg"
     filename = f"{today}-{random.randint(1000, 9999)}.md"
     file_path = os.path.join("src", "content", "blog", filename)
     
-    # 确保目录存在
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     
     with open(file_path, "w", encoding="utf-8") as f:
