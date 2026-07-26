@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 
-// 安全读取 src/content/blog/ 下的文章
 let posts = [];
 try {
 	posts = (await getCollection('blog')).sort(
