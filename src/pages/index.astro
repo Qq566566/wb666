@@ -1,10 +1,15 @@
 ---
 import { getCollection } from 'astro:content';
 
-// 自动获取 src/content/blog/ 目录下的所有 Markdown 文章，并按日期排序
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+// 安全读取 src/content/blog/ 下的文章
+let posts = [];
+try {
+	posts = (await getCollection('blog')).sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
+} catch (e) {
+	console.error(e);
+}
 ---
 
 <!DOCTYPE html>
@@ -22,23 +27,18 @@ const posts = (await getCollection('blog')).sort(
 	
 	<main>
 		{posts.length === 0 ? (
-			<p>暂无文章，等待 GitHub Actions 自动运行生成...</p>
+			<p>暂无文章，等待自动更新...</p>
 		) : (
 			<div style="display: flex; flex-direction: column; gap: 30px;">
 				{posts.map((post) => (
 					<article style="border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; background: #fff;">
-						<h2 style="margin: 0 0 10px 0;">
+						<h2 style="margin: 0 0 10px 0; color: #111;">
 							{post.data.title}
 						</h2>
 						<div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">
 							发布日期: {post.data.pubDate.toISOString().split('T')[0]}
 						</div>
 						<p style="margin: 0 0 16px 0; color: #4b5563;">{post.data.description}</p>
-						
-						<!-- 直接将 Markdown 的正文展示在卡片中 -->
-						<div style="border-top: 1px dashed #e5e7eb; padding-top: 12px; color: #374151;">
-							{post.body}
-						</div>
 					</article>
 				))}
 			</div>
