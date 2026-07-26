@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map(post => ({
+  return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
   }));
@@ -14,44 +14,132 @@ const { Content } = await post.render();
 ---
 
 <!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{post.data.title} | VITA</title>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        line-height: 1.8;
-        color: #2d3748;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-        background-color: #fcfcfc;
-      }
-      .back-link {
-        display: inline-block;
-        margin-bottom: 2rem;
-        color: #4a5568;
-        text-decoration: none;
-        font-size: 0.9rem;
-      }
-      .back-link:hover { color: #000; }
-      h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #1a202c; }
-      .date { color: #718096; font-size: 0.9rem; margin-bottom: 2rem; }
-      .content { font-size: 1.05rem; }
-      .content h2 { margin-top: 2rem; border-bottom: 1px solid #edf2f7; padding-bottom: 0.5rem; }
-      .content p { margin: 1.2rem 0; }
-    </style>
-  </head>
-  <body>
-    <a href="/" class="back-link">← 返回首页</a>
-    <article>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{post.data.title} | VITA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #fbfbf9;
+      --card-bg: #ffffff;
+      --text-primary: #121815;
+      --text-muted: #64746b;
+      --border-color: #eaedea;
+      --accent-color: #1e3a2b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 40px 24px 80px 24px;
+    }
+
+    nav {
+      margin-bottom: 40px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+      color: var(--accent-color);
+    }
+
+    header {
+      margin-bottom: 40px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--text-primary);
+    }
+
+    /* Markdown 正文样式 */
+    .article-content {
+      font-size: 1.05rem;
+      color: #2c3531;
+    }
+
+    .article-content h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin: 36px 0 16px 0;
+      color: var(--text-primary);
+    }
+
+    .article-content h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 28px 0 12px 0;
+    }
+
+    .article-content p {
+      margin-bottom: 20px;
+    }
+
+    .article-content ul, .article-content ol {
+      margin: 0 0 20px 24px;
+    }
+
+    .article-content li {
+      margin-bottom: 8px;
+    }
+
+    .article-content blockquote {
+      border-left: 3px solid var(--accent-color);
+      padding-left: 16px;
+      margin: 24px 0;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/" class="back-btn">← Back to Home / 返回首页</a>
+    </nav>
+
+    <header>
+      <div class="post-date">{post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : ''}</div>
       <h1>{post.data.title}</h1>
-      <div class="date">{post.data.pubDate}</div>
-      <div class="content">
-        <Content />
-      </div>
+    </header>
+
+    <article class="article-content">
+      <Content />
     </article>
-  </body>
+  </div>
+</body>
 </html>
