@@ -220,10 +220,10 @@ try {
 
           return (
             <a 
-              href={`/blog/${post.id}/`} 
-              style="text-decoration: none; color: inherit; display: block; width: 100%; cursor: pointer;"
+              href={`/blog/${post.id}`} 
+              style="text-decoration: none; color: inherit; display: block; width: 100%; position: relative; z-index: 1;"
             >
-              <article class="post-card">
+              <article class="post-card" style="pointer-events: none; cursor: pointer;">
                 <div class="post-date">
                   {post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}
                 </div>
