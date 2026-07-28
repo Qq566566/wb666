@@ -25,6 +25,9 @@ if (fullTitle.includes('|')) {
   titleEn = parts[1].trim();
 }
 
+// 获取文章封面图（适配 image 或 heroImage 字段）
+const heroImage = post.data.image || post.data.heroImage || '';
+
 // 格式化日期
 const formattedDate = post.data.pubDate 
   ? new Date(post.data.pubDate).toISOString().split('T')[0] 
@@ -156,6 +159,22 @@ const formattedDate = post.data.pubDate
       line-height: 1.35;
       color: var(--text-primary);
       letter-spacing: -0.6px;
+    }
+
+    /* Hero Image */
+    .article-hero-image-wrapper {
+      margin-top: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .article-hero-image-wrapper img {
+      width: 100%;
+      height: auto;
+      max-height: 420px;
+      object-fit: cover;
+      display: block;
     }
 
     /* Key Takeaways Box (速览卡片) */
@@ -343,6 +362,13 @@ const formattedDate = post.data.pubDate
 
         <h1 class="lang-en">{titleEn}</h1>
         <h1 class="lang-cn" style="display: none;">{titleCn}</h1>
+
+        <!-- 动态封面图展示 -->
+        {heroImage && (
+          <div class="article-hero-image-wrapper">
+            <img src={heroImage} alt={titleEn} />
+          </div>
+        )}
       </header>
 
       <!-- Key Takeaways Highlight Box -->
@@ -406,7 +432,7 @@ const formattedDate = post.data.pubDate
         enBlock.forEach(el => el.style.display = 'block');
         cnBlock.forEach(el => el.style.display = 'none');
         enTitles.forEach(el => el.style.display = 'block');
-        enTitles.forEach(el => el.style.display = 'block');
+        cnTitles.forEach(el => el.style.display = 'block');
         cnTitles.forEach(el => el.style.display = 'none');
         if (btn) btn.innerText = '🌐 ZH / 中文';
       }
