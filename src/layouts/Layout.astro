@@ -7,7 +7,7 @@ interface Props {
 const { title, description = "VITA Longevity Institute - Peer-Reviewed Health & Longevity Science Repository." } = Astro.props;
 ---
 
-<!dnctype html>
+<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -18,7 +18,7 @@ const { title, description = "VITA Longevity Institute - Peer-Reviewed Health & 
 		<title>{title}</title>
 	</head>
 	<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
-		<!--  Header -->
+		<!-- Header -->
 		<header class="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
 			<div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
 				<a href="/" class="flex items-center gap-3 decoration-0">
@@ -39,9 +39,9 @@ const { title, description = "VITA Longevity Institute - Peer-Reviewed Health & 
 			</div>
 		</header>
 
-		<!--  -->
+		<!-- Main Content -->
 		<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
-			<Slot />
+			<slot />
 		</main>
 
 		<!-- Footer -->
