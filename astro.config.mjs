@@ -5,6 +5,12 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://blog.wb666.im',
   integrations: [
-    sitemap(),
+    sitemap({
+      filter: (page) => typeof page === 'string' && page.trim().length > 0,
+      serialize(item) {
+        if (!item || !item.url) return undefined;
+        return item;
+      },
+    }),
   ],
 });
