@@ -10,6 +10,9 @@ const blog = defineCollection({
       const parsed = new Date(val);
       return isNaN(parsed.getTime()) ? new Date() : parsed;
     }),
+    category: z.string().optional(),
+    image: z.string().optional(),     // 允许接收动态图片 URL
+    heroImage: z.string().optional(), // 允许接收动态封面图 URL
   }),
 });
 
