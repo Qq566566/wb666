@@ -31,7 +31,7 @@ jobs:
       - name: Run AI Auto Post Agent
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          # 关键：传递触发事件类型（is_manual 判定依靠此变量）
+          # 传递触发事件类型
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: python scripts/auto_post.py
 
@@ -39,5 +39,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase
           git add src/content/blog/
           git diff --staged --quiet || (git commit -m "docs: publish daily health research post" && git push)
