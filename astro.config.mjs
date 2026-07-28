@@ -6,11 +6,7 @@ export default defineConfig({
   site: 'https://blog.wb666.im',
   integrations: [
     sitemap({
-      filter: (page) => typeof page === 'string' && page.trim().length > 0,
-      serialize(item) {
-        if (!item || !item.url) return undefined;
-        return item;
-      },
+      filter: (page) => Boolean(page),
     }),
   ],
 });
