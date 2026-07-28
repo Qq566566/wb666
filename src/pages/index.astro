@@ -14,7 +14,7 @@ allPosts.sort((a, b) => {
 const heroPost = allPosts[0];
 const gridPosts = allPosts.slice(1);
 
-// 辅助函数：处理中英文和图片
+// 辅助函数：处理中英文和智能免 Token 配图
 const parsePost = (post) => {
   if (!post) return null;
   const fullTitle = post.data.title || '';
@@ -35,9 +35,21 @@ const parsePost = (post) => {
   const rawId = post.slug || post.id || '';
   const cleanSlug = rawId.replace(/\.[^/.]+$/, "");
   
-  // 占位图生成逻辑 (根据标题随机生成，或由AI脚本未来提供真正图)
-  const imageSeed = cleanSlug.split('-').pop();
-  const imageUrl = post.data.image || `https://api.dicebear.com/8.x/shapes/svg?seed=${imageSeed}&backgroundColor=f0f4f1,e2ebe5`;
+  // 智能配图逻辑 (0 额外 Token 消耗)：
+  // 1. 优先采用 Frontmatter 显式指定的 image
+  // 2. 其次根据文章分类 (category) 或 slug 自动映射 Unsplash 免费学术图库
+  // 3. 保底使用 DiceBear 矢量图形
+  const category = post.data.category || 'biology,health';
+  const fallbackDiceBear = `https://api.dicebear.com/8.x/shapes/svg?seed=${cleanSlug}&backgroundColor=f0f4f1,e2ebe5`;
+  
+  let imageUrl = post.data.image;
+  if (!imageUrl) {
+    if (post.data.category) {
+      imageUrl = `https://source.unsplash.com/800x450/?${encodeURIComponent(post.data.category)},science`;
+    } else {
+      imageUrl = fallbackDiceBear;
+    }
+  }
 
   return {
     ...post,
