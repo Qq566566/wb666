@@ -92,7 +92,14 @@ def get_existing_titles():
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
-    clean_cat = category.strip().lower() if category else "health"
+    
+    # 【防呆清洗】过滤掉所有标点符号和空格，只保留纯小写字母
+    clean_cat = re.sub(r'[^a-zA-Z]', '', category).lower()
+    
+    # 允许的合法分类清单，若不在清单内则默认回退到 longevity
+    valid_categories = {"mitochondria", "nutrition", "sleep", "dna", "metabolism", "neuroscience", "longevity", "cellular"}
+    if clean_cat not in valid_categories:
+        clean_cat = "longevity"
     
     return f"""---
 title: "{clean_title}"
@@ -152,7 +159,7 @@ CN_TITLE: (专业中文标题)
 EN_TITLE: (Native, concise, and academic English title)
 CN_DESC: (一句话中文摘要，100字以内)
 EN_DESC: (One-sentence clear English summary)
-CATEGORY: (Select strictly ONE English word matching the research domain from: [mitochondria, nutrition, sleep, dna, metabolism, neuroscience, longevity, cellular])
+CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, sleep, dna, metabolism, neuroscience, longevity, cellular])
 
 === ENGLISH SECTION ===
 (Write pure native English article matching all E-E-A-T requirements above.)
@@ -171,7 +178,7 @@ CATEGORY: (Select strictly ONE English word matching the research domain from: [
 
     title_cn, title_en = "最新健康前沿研究", "Latest Health Science Research"
     desc_cn, desc_en = "探讨最新健康科学机制与实操策略。", "Exploring health mechanisms and lifestyle strategies."
-    category = "health"
+    category = "longevity"
     
     if "=== TITLE SECTION ===" in raw_content:
         title_part = raw_content.split("=== ENGLISH SECTION ===")[0]
@@ -185,7 +192,9 @@ CATEGORY: (Select strictly ONE English word matching the research domain from: [
         if m_en: title_en = m_en.group(1).strip()
         if d_cn: desc_cn = d_cn.group(1).strip()
         if d_en: desc_en = d_en.group(1).strip()
-        if m_cat: category = m_cat.group(1).strip()
+        if m_cat:
+            # 提取时先做一次初步清洗
+            category = re.sub(r'[^a-zA-Z]', '', m_cat.group(1)).lower()
 
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today)
 
