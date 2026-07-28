@@ -2,15 +2,14 @@ name: Daily AI Post Generation
 
 on:
   schedule:
-    # 每天配置 7 个分散的时间点触发检查（UTC时间，约对应北京时间 09:00 - 23:00）
-    - cron: '18 1 * * *'   # 约 09:18
-    - cron: '42 3 * * *'   # 约 11:42
-    - cron: '15 6 * * *'   # 约 14:15
-    - cron: '50 8 * * *'   # 约 16:50
-    - cron: '22 11 * * *'  # 约 19:22
-    - cron: '08 13 * * *'  # 约 21:08
-    - cron: '35 15 * * *'  # 约 23:35
-  workflow_dispatch: # 保留手动触发按钮
+    # 每天配置分散的时间点（Cron 触发时间点带有随机分钟数，避免整点）
+    - cron: '27 1 * * *'   # 约北京时间 09:27
+    - cron: '14 4 * * *'   # 约北京时间 12:14
+    - cron: '08 7 * * *'   # 约北京时间 15:08
+    - cron: '53 9 * * *'   # 约北京时间 17:53
+    - cron: '31 12 * * *'  # 约北京时间 20:31
+    - cron: '19 15 * * *'  # 约北京时间 23:19
+  workflow_dispatch: # 手动触发按钮
 
 jobs:
   build-and-post:
@@ -32,6 +31,8 @@ jobs:
       - name: Run AI Auto Post Agent
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          # 关键：传递触发事件类型（is_manual 判定依靠此变量）
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: python scripts/auto_post.py
 
       - name: Commit and push if changed
@@ -39,5 +40,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add src/content/blog/
-          # 如果本次没生成新文件（例如跳过或超上限），自动跳过 commit，不触发无用构建
           git diff --staged --quiet || (git commit -m "docs: publish daily health research post" && git push)
