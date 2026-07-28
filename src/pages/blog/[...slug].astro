@@ -182,7 +182,7 @@ if (fullTitle.includes('|')) {
     </nav>
 
     <header>
-      <div class="post-date">{post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'}</div>
+      <div class="post-date">{post.data.pubDate ? new Date(post.data.pubDate).toISOString().split('T')[0] : 'Recently Published'}</div>
       <h1 class="lang-en">{titleEn}</h1>
       <h1 class="lang-cn" style="display: none;">{titleCn}</h1>
     </header>
