@@ -47,7 +47,7 @@ const parsePost = (post) => {
     descEn,
     cleanSlug,
     imageUrl,
-    date: post.data.pubDate ? post.data.pubDate.toISOString().split('T')[0] : 'Recently Published'
+    date: post.data.pubDate ? new Date(post.data.pubDate).toISOString().split('T')[0] : 'Recently Published'
   };
 };
 
