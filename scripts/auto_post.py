@@ -93,7 +93,7 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
-    # pubDate 保持 YYYY-MM-DD，保证 Astro 解析正常
+    # pubDate 保持 YYYY-MM-DD 原生格式，确保 Astro 引擎兼容
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
@@ -124,41 +124,44 @@ def generate_article():
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
-    print(f"=== 开始撰写精品文章 (参考热点: {trend}) ===")
+    print(f"=== 开始撰写去 AI 味原生精品文章 (参考热点: {trend}) ===")
 
     prompt = f"""
-你是一位顶级的健康医学科普作家与抗衰老研究学者。
-请结合今天的健康热点/前沿方向《{trend}》，为你自己的双语健康博客撰写一篇**高规格精品**深度科普文章。
+You are an authoritative, native English health journalist and longevity researcher writing for a premium publication (like The Wall Street Journal's Health section or Peter Attia's Drive).
 
-【防重要求】：
-绝对不要重复以下已写过的标题与主题：
+Write an insightful, human-sounding research article based on this topic: 《{trend}》.
+
+【ANTI-DUPLICATION】:
+Do not duplicate these past topics:
 {json.dumps(existing_titles, ensure_ascii=False)}
 
-【精品写作要求】：
-1. 引用权威背书：涉及机制时，需提及知名科研机构（如 Harvard Health, Stanford Neuroscience, Nature 等）。
-2. 包含 Key Takeaways：英文部分开头必须包含一个 `> 💡 **Key Takeaways**` 引用卡片，总结 3 条一句话干货。
-3. 包含 Protocol 表格/卡片：必须提供可操作的日常复选框清单或表格。
+【CRITICAL STYLE & DE-AI WRITING RULES】:
+1. NO AI CLICHÉS: Strictly BAN phrases like "In a world where...", "It's not just A, it's B", "A double-edged sword", "Game-changer", "Revolutionary", "Delve into", "Tapestry", "Glaring disaster zone".
+2. NATIVE HUMAN TONE: Avoid robotic, high-flown, or overly sensational language. Start directly with a captivating real-world scenario, a practical clinical observations, or an intriguing scientific paradox.
+3. PRECISE TERMINOLOGY: Avoid generic verbs (like "fuel", "ignite", "boost"). Use precise, grounded vocabulary (e.g., *attenuate, downregulate, displace, leverage, buffer, exacerbate*).
+4. CITATIONS: Naturally mention credible scientific sources (e.g., *Stanford School of Medicine*, *Harvard T.H. Chan*, *Nature Neuroscience*).
+5. STRUCTURE:
+   - Include a `> 💡 **Key Takeaways**` callout box right near the top with 3 bullet points.
+   - Include an actionable, realistic protocol table or checklist.
 
-【输出格式要求】：
-请严格按照以下格式输出：
-
+【REQUIRED OUTPUT FORMAT】:
 === TITLE SECTION ===
-CN_TITLE: (吸引人且专业的中文文章标题)
-EN_TITLE: (对应的英文文章标题，简洁规范)
+CN_TITLE: (专业且符合中文表达习惯的标题)
+EN_TITLE: (Native, concise, and compelling English article title)
 CN_DESC: (一句话中文摘要，100字以内)
-EN_DESC: (一句话英文摘要)
+EN_DESC: (One-sentence clear English summary)
 
 === ENGLISH SECTION ===
-(用纯英文撰写，结构包含：Introduction, Key Takeaways 卡片, Core Mechanisms, Actionable Protocol, Conclusion。)
+(Write the main article in pure native English.)
 
 === CHINESE SECTION ===
-(用纯中文撰写，结构包含：引言、核心机制、实操指南、总结。)
+(写对应的地道中文版本，包含：引言、核心科学机制、日常实操指南、总结。)
 """
 
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.85,
+        temperature=0.75, # 降低温度以减少花哨虚构修词
     )
 
     raw_content = response.choices[0].message.content.strip()
@@ -192,7 +195,7 @@ EN_DESC: (一句话英文摘要)
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    # 生成干净的英文 Slug 文件名：例如 combating-brain-fog-2026-07-29.md
+    # 生成干净且带有语意的英文 Slug 文件名：例如 combats-brain-fog-2026-07-29.md
     slug = generate_clean_slug(title_en)
     filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
@@ -200,7 +203,7 @@ EN_DESC: (一句话英文摘要)
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(final_content)
 
-    print(f"✅ 成功生成精品文章: {file_path}")
+    print(f"✅ 成功生成地道英文博文: {file_path}")
 
 if __name__ == "__main__":
     generate_article()
