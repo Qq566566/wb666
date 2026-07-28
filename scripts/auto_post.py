@@ -93,7 +93,6 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
-    # pubDate 保持 YYYY-MM-DD 原生格式，确保 Astro 引擎兼容
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
@@ -105,11 +104,9 @@ def generate_article():
     us_date = get_us_formatted_date(today)
     os.makedirs(BLOG_DIR, exist_ok=True)
     
-    # 区分手动触发与定时触发
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     is_manual = (event_name == "workflow_dispatch")
     
-    # 统计今天生成的文章数量 (精确匹配文件名结尾的日期)
     today_files = [f for f in os.listdir(BLOG_DIR) if f.endswith(f"-{today}.md")]
     current_count = len(today_files)
 
@@ -124,44 +121,47 @@ def generate_article():
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
-    print(f"=== 开始撰写去 AI 味原生精品文章 (参考热点: {trend}) ===")
+    print(f"=== 开始撰写智库级精选博文 (参考热点: {trend}) ===")
 
     prompt = f"""
-You are an authoritative, native English health journalist and longevity researcher writing for a premium publication (like The Wall Street Journal's Health section or Peter Attia's Drive).
+You are the Chief Science Officer and Medical Journalist for "VITA Longevity Repository", a world-class health research database.
 
-Write an insightful, human-sounding research article based on this topic: 《{trend}》.
+Write an authoritative, peer-reviewed style research paper based on: 《{trend}》.
 
 【ANTI-DUPLICATION】:
-Do not duplicate these past topics:
+Do not write about these past topics:
 {json.dumps(existing_titles, ensure_ascii=False)}
 
-【CRITICAL STYLE & DE-AI WRITING RULES】:
-1. NO AI CLICHÉS: Strictly BAN phrases like "In a world where...", "It's not just A, it's B", "A double-edged sword", "Game-changer", "Revolutionary", "Delve into", "Tapestry", "Glaring disaster zone".
-2. NATIVE HUMAN TONE: Avoid robotic, high-flown, or overly sensational language. Start directly with a captivating real-world scenario, a practical clinical observations, or an intriguing scientific paradox.
-3. PRECISE TERMINOLOGY: Avoid generic verbs (like "fuel", "ignite", "boost"). Use precise, grounded vocabulary (e.g., *attenuate, downregulate, displace, leverage, buffer, exacerbate*).
-4. CITATIONS: Naturally mention credible scientific sources (e.g., *Stanford School of Medicine*, *Harvard T.H. Chan*, *Nature Neuroscience*).
-5. STRUCTURE:
-   - Include a `> 💡 **Key Takeaways**` callout box right near the top with 3 bullet points.
-   - Include an actionable, realistic protocol table or checklist.
+【E-E-A-T & DE-AI WRITING REQUIREMENTS】:
+1. STRICT NO AI CLICHÉS: NO "In a world where...", "It's not just A, it's B", "Double-edged sword", "Game-changer", "Revolutionary", "Delve into", "Tapestry".
+2. PROFESSIONAL METADATA BLOCK:
+   Near the top of the English section, you MUST output a metadata badge quote like this:
+   `> 🔬 **Peer-Reviewed & Medically Checked** | **Evidence Level**: Grade A (Clinical & Mechanistic Studies) | **Reading Time**: 6 min`
+3. STRUCTURE:
+   - `> 💡 **Key Takeaways**`: 3 bullet points summarizing core actionable findings.
+   - Core Mechanisms (mentioning Harvard, Stanford, Nature, or Cell studies).
+   - Practical Protocol (Checklist / Table).
+   - **References Section**: At the bottom, provide 2-3 realistic academic references (e.g., *Journal of Clinical Endocrinology*, *Nature Neuroscience*).
+   - **Medical Disclaimer**: End with a formal medical disclaimer block.
 
 【REQUIRED OUTPUT FORMAT】:
 === TITLE SECTION ===
-CN_TITLE: (专业且符合中文表达习惯的标题)
-EN_TITLE: (Native, concise, and compelling English article title)
+CN_TITLE: (专业中文标题)
+EN_TITLE: (Native, concise, and academic English title)
 CN_DESC: (一句话中文摘要，100字以内)
 EN_DESC: (One-sentence clear English summary)
 
 === ENGLISH SECTION ===
-(Write the main article in pure native English.)
+(Write pure native English article matching all E-E-A-T requirements above.)
 
 === CHINESE SECTION ===
-(写对应的地道中文版本，包含：引言、核心科学机制、日常实操指南、总结。)
+(写对应的地道中文版本，包含：元数据标识、核心要点卡片、机制解析、实操指南、参考文献与医学免责声明。)
 """
 
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.75, # 降低温度以减少花哨虚构修词
+        temperature=0.7,
     )
 
     raw_content = response.choices[0].message.content.strip()
@@ -195,7 +195,6 @@ EN_DESC: (One-sentence clear English summary)
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    # 生成干净且带有语意的英文 Slug 文件名：例如 combats-brain-fog-2026-07-29.md
     slug = generate_clean_slug(title_en)
     filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
@@ -203,7 +202,7 @@ EN_DESC: (One-sentence clear English summary)
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(final_content)
 
-    print(f"✅ 成功生成地道英文博文: {file_path}")
+    print(f"✅ 成功生成智库级权威文章: {file_path}")
 
 if __name__ == "__main__":
     generate_article()
