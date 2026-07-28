@@ -31,23 +31,25 @@ const parsePost = (post) => {
     descCn = descParts[0].replace('【中文摘要】', '').trim();
     descEn = descParts[1].trim();
   }
+  
   // 核心修复：纯净获取 slug 并移除 .md 后缀
   const rawId = post.slug || post.id || '';
   const cleanSlug = rawId.replace(/\.[^/.]+$/, "");
   
-  // 智能配图逻辑 (0 额外 Token 消耗)：
+  // 分类清洗（只保留小写字母）
+  const rawCategory = post.data.category || '';
+  const cleanCategory = rawCategory.replace(/[^a-zA-Z]/g, '').toLowerCase();
+
   // 1. 优先采用 Frontmatter 显式指定的 image
-  // 2. 其次根据文章分类 (category) 或 slug 自动映射 Unsplash 免费学术图库
-  // 3. 保底使用 DiceBear 矢量图形
-  const category = post.data.category || 'biology,health';
-  const fallbackDiceBear = `https://api.dicebear.com/8.x/shapes/svg?seed=${cleanSlug}&backgroundColor=f0f4f1,e2ebe5`;
-  
   let imageUrl = post.data.image;
+  
+  // 2. 如果没有指定 image，优先从本地 /images/categories/ 加载，若无则使用高级抽象矢量图兜底（绝不裂图）
   if (!imageUrl) {
-    if (post.data.category) {
-      imageUrl = `https://source.unsplash.com/800x450/?${encodeURIComponent(post.data.category)},science`;
+    if (cleanCategory) {
+      imageUrl = `/images/categories/${cleanCategory}.svg`;
     } else {
-      imageUrl = fallbackDiceBear;
+      // 绝对可靠的学术几何矢量图生成接口
+      imageUrl = `https://api.dicebear.com/8.x/shapes/svg?seed=${cleanSlug}&backgroundColor=1e3a2b,2c5282,1a365d,276749`;
     }
   }
 
@@ -59,6 +61,7 @@ const parsePost = (post) => {
     descEn,
     cleanSlug,
     imageUrl,
+    cleanCategory,
     date: post.data.pubDate ? new Date(post.data.pubDate).toISOString().split('T')[0] : 'Recently Published'
   };
 };
@@ -220,6 +223,7 @@ const grid = gridPosts.map(parsePost);
     .hero-image-wrapper {
       position: relative;
       overflow: hidden;
+      background: #f0f4f1;
     }
 
     .hero-image {
@@ -326,6 +330,7 @@ const grid = gridPosts.map(parsePost);
     .grid-image-wrapper {
       height: 180px;
       overflow: hidden;
+      background: #f0f4f1;
     }
 
     .grid-image {
@@ -489,7 +494,13 @@ const grid = gridPosts.map(parsePost);
       <a href={`/blog/${hero.cleanSlug}`} class="hero-section">
         <article class="hero-card">
           <div class="hero-image-wrapper">
-            <img src={hero.imageUrl} alt={hero.titleEn} class="hero-image" loading="lazy" />
+            <img 
+              src={hero.imageUrl} 
+              alt={hero.titleEn} 
+              class="hero-image" 
+              loading="lazy"
+              onerror="this.onerror=null; this.src='https://api.dicebear.com/8.x/shapes/svg?seed=fallback';" 
+            />
           </div>
           <div class="hero-content">
             <div class="hero-meta-bar">
@@ -524,7 +535,13 @@ const grid = gridPosts.map(parsePost);
             <a href={`/blog/${post.cleanSlug}`} class="post-card-link">
               <article class="grid-card">
                 <div class="grid-image-wrapper">
-                  <img src={post.imageUrl} alt={post.titleEn} class="grid-image" loading="lazy" />
+                  <img 
+                    src={post.imageUrl} 
+                    alt={post.titleEn} 
+                    class="grid-image" 
+                    loading="lazy" 
+                    onerror="this.onerror=null; this.src='https://api.dicebear.com/8.x/shapes/svg?seed=fallback';"
+                  />
                 </div>
                 <div class="grid-content">
                   <div class="grid-meta">
