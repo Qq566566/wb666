@@ -24,6 +24,11 @@ if (fullTitle.includes('|')) {
   titleCn = parts[0].trim();
   titleEn = parts[1].trim();
 }
+
+// 格式化日期
+const formattedDate = post.data.pubDate 
+  ? new Date(post.data.pubDate).toISOString().split('T')[0] 
+  : 'Recently Published';
 ---
 
 <!DOCTYPE html>
@@ -31,10 +36,10 @@ if (fullTitle.includes('|')) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{titleEn} | VITA Longevity</title>
+  <title>{titleEn} | VITA Longevity Repository</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-color: #fbfbf9;
@@ -44,6 +49,8 @@ if (fullTitle.includes('|')) {
       --border-color: #eaedea;
       --accent-color: #1e3a2b;
       --accent-light: #f0f4f1;
+      --serif-font: 'Noto Serif SC', serif;
+      --sans-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,22 +58,31 @@ if (fullTitle.includes('|')) {
     body {
       background-color: var(--bg-color);
       color: var(--text-primary);
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--sans-font);
       line-height: 1.85;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-wrapper {
+      flex: 1;
+      width: 100%;
     }
 
     .container {
-      max-width: 760px;
+      max-width: 800px;
       margin: 0 auto;
-      padding: 40px 24px 100px 24px;
+      padding: 40px 24px 80px 24px;
     }
 
+    /* Header Nav */
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 50px;
+      margin-bottom: 40px;
       padding-bottom: 20px;
       border-bottom: 1px solid var(--border-color);
     }
@@ -102,26 +118,74 @@ if (fullTitle.includes('|')) {
       background: #e2ebe5;
     }
 
-    header {
-      margin-bottom: 40px;
-      padding-bottom: 30px;
+    /* Article Header */
+    header.article-header {
+      margin-bottom: 36px;
+      padding-bottom: 28px;
       border-bottom: 1px solid var(--border-color);
     }
 
-    .post-date {
-      font-size: 0.85rem;
+    .meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
       color: var(--text-muted);
-      margin-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .badge-evidence {
+      background: var(--accent-light);
+      color: var(--accent-color);
+      border: 1px solid #d8e2dc;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .dot-divider {
+      color: #cbd5e1;
     }
 
     h1 {
-      font-size: 2.1rem;
+      font-size: 2.2rem;
       font-weight: 600;
       line-height: 1.35;
       color: var(--text-primary);
-      letter-spacing: -0.5px;
+      letter-spacing: -0.6px;
     }
 
+    /* Key Takeaways Box (速览卡片) */
+    .takeaways-box {
+      background: #f4f7f5;
+      border-left: 4px solid var(--accent-color);
+      border-radius: 0 12px 12px 0;
+      padding: 20px 24px;
+      margin-bottom: 36px;
+    }
+
+    .takeaways-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-color);
+      margin-bottom: 8px;
+    }
+
+    .takeaways-content {
+      font-size: 0.95rem;
+      color: #2c3531;
+      line-height: 1.6;
+    }
+
+    /* Article Content Typography */
     .article-content {
       font-size: 1.08rem;
       color: #2c3531;
@@ -129,16 +193,19 @@ if (fullTitle.includes('|')) {
     }
 
     .article-content h2 {
-      font-size: 1.45rem;
+      font-size: 1.5rem;
       font-weight: 600;
-      margin: 40px 0 16px 0;
+      margin: 42px 0 18px 0;
       color: var(--text-primary);
+      letter-spacing: -0.3px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 8px;
     }
 
     .article-content h3 {
-      font-size: 1.2rem;
+      font-size: 1.22rem;
       font-weight: 600;
-      margin: 30px 0 12px 0;
+      margin: 32px 0 14px 0;
       color: var(--text-primary);
     }
 
@@ -151,69 +218,194 @@ if (fullTitle.includes('|')) {
     }
 
     .article-content li {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .article-content blockquote {
       border-left: 3px solid var(--accent-color);
-      padding: 8px 0 8px 20px;
+      padding: 12px 20px;
       margin: 28px 0;
       color: var(--text-muted);
       font-style: italic;
-      background: rgba(30, 58, 43, 0.02);
+      background: rgba(30, 58, 43, 0.03);
       border-radius: 0 8px 8px 0;
+      font-size: 1.02rem;
     }
 
-    footer {
+    .article-content code {
+      background: #f0f3f1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--accent-color);
+      font-family: monospace;
+    }
+
+    .article-content pre {
+      background: #1e2925;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    .article-content pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* Footer Styles */
+    footer.site-footer {
+      background: #0f1715;
+      color: #94a3b8;
       margin-top: 80px;
-      padding-top: 30px;
-      border-top: 1px solid var(--border-color);
-      text-align: center;
+      padding: 48px 0 32px 0;
       font-size: 0.8rem;
-      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .footer-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #1e2925;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand h3 {
+      color: #f8fafc;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-brand p {
+      color: #64748b;
+      font-size: 0.78rem;
+    }
+
+    .footer-grade {
+      color: #34d399;
+      font-family: monospace;
+      font-size: 0.72rem;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .disclaimer-title {
+      color: #cbd5e1;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+    }
+
+    .disclaimer-text {
+      color: #64748b;
+      line-height: 1.6;
+      font-size: 0.72rem;
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 1.7rem; }
+      .container { padding: 24px 16px 60px 16px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <nav>
-      <a href="/" class="back-btn">← Back to Research Repository / Home</a>
-      <button class="lang-switcher" id="langBtn" onclick="toggleArticleLang()">🌐 ZH / 中文</button>
-    </nav>
+  <div class="page-wrapper">
+    <div class="container">
+      <nav>
+        <a href="/" class="back-btn">← Back to Research Repository / Home</a>
+        <button class="lang-switcher" id="langBtn" onclick="toggleArticleLang()">🌐 ZH / 中文</button>
+      </nav>
 
-    <header>
-      <div class="post-date">{post.data.pubDate ? new Date(post.data.pubDate).toISOString().split('T')[0] : 'Recently Published'}</div>
-      <h1 class="lang-en">{titleEn}</h1>
-      <h1 class="lang-cn" style="display: none;">{titleCn}</h1>
-    </header>
+      <header class="article-header">
+        <div class="meta-bar">
+          <span class="badge-evidence">Grade-A Clinical Focus</span>
+          <span class="dot-divider">•</span>
+          <span>Peer-Reviewed Paper</span>
+          <span class="dot-divider">•</span>
+          <time>{formattedDate}</time>
+        </div>
 
-    <article class="article-content" id="articleBody">
-      <Content />
-    </article>
+        <h1 class="lang-en">{titleEn}</h1>
+        <h1 class="lang-cn" style="display: none;">{titleCn}</h1>
+      </header>
 
-    <footer>
-      <p>© 2026 VITA Longevity Institute. All rights reserved.</p>
-    </footer>
+      <!-- Key Takeaways Highlight Box -->
+      <div class="takeaways-box">
+        <div class="takeaways-header">
+          <span>🔬 Key Research Takeaway</span>
+        </div>
+        <div class="takeaways-content lang-en">
+          This peer-reviewed paper translates clinical trial findings into actionable longevity protocols. Always consult a healthcare professional before altering medical routines.
+        </div>
+        <div class="takeaways-content lang-cn" style="display: none;">
+          本科学译本将临床试验和细胞医学成果转化为可落地的健康干预方案。在调整任何医疗或营养方案前，请务必咨询专业医师。
+        </div>
+      </div>
+
+      <article class="article-content" id="articleBody">
+        <Content />
+      </article>
+    </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h3>VITA Longevity Institute</h3>
+          <p>Translating cutting-edge clinical neuroscience, cellular metabolism, and longevity research into actionable human protocols.</p>
+        </div>
+        <div class="footer-grade">
+          Grade-A Clinical Focus
+        </div>
+      </div>
+      <div class="disclaimer-box">
+        <div class="disclaimer-title">MEDICAL DISCLAIMER</div>
+        <p class="disclaimer-text">
+          The content published on VITA Repository is strictly for academic, educational, and research informational purposes. It does not constitute formal medical advice, clinical diagnosis, or treatment protocols. Never disregard professional medical advice or delay seeking it because of information read on this portal.
+        </p>
+        <p class="disclaimer-text" style="margin-top: 10px; color: #475569;">
+          © {new Date().getFullYear()} VITA Longevity Institute. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
 
   <script is:inline>
     function formatArticleByLang(lang) {
-      const enBlock = document.querySelector('.lang-block.lang-en');
-      const cnBlock = document.querySelector('.lang-block.lang-cn');
+      const enBlock = document.querySelectorAll('.lang-block.lang-en, .takeaways-content.lang-en');
+      const cnBlock = document.querySelectorAll('.lang-block.lang-cn, .takeaways-content.lang-cn');
       
       const enTitles = document.querySelectorAll('h1.lang-en');
       const cnTitles = document.querySelectorAll('h1.lang-cn');
       const btn = document.getElementById('langBtn');
 
       if (lang === 'zh') {
-        if (enBlock) enBlock.style.display = 'none';
-        if (cnBlock) cnBlock.style.display = 'block';
+        enBlock.forEach(el => el.style.display = 'none');
+        cnBlock.forEach(el => el.style.display = 'block');
         enTitles.forEach(el => el.style.display = 'none');
         cnTitles.forEach(el => el.style.display = 'block');
         if (btn) btn.innerText = '🌐 EN / English';
       } else {
-        if (enBlock) enBlock.style.display = 'block';
-        if (cnBlock) cnBlock.style.display = 'none';
+        enBlock.forEach(el => el.style.display = 'block');
+        cnBlock.forEach(el => el.style.display = 'none');
+        enTitles.forEach(el => el.style.display = 'block');
         enTitles.forEach(el => el.style.display = 'block');
         cnTitles.forEach(el => el.style.display = 'none');
         if (btn) btn.innerText = '🌐 ZH / 中文';
