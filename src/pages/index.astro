@@ -14,7 +14,7 @@ allPosts.sort((a, b) => {
 const heroPost = allPosts[0];
 const gridPosts = allPosts.slice(1);
 
-// 辅助函数：处理中英文和智能免 Token 配图
+// 辅助函数：处理中英文和智能在线学术配图
 const parsePost = (post) => {
   if (!post) return null;
   const fullTitle = post.data.title || '';
@@ -32,25 +32,48 @@ const parsePost = (post) => {
     descEn = descParts[1].trim();
   }
   
-  // 核心修复：纯净获取 slug 并移除 .md 后缀
+  // 获取 slug 并移除后缀
   const rawId = post.slug || post.id || '';
   const cleanSlug = rawId.replace(/\.[^/.]+$/, "");
   
-  // 分类清洗（只保留小写字母）
+  // 1. 获取已有的 category
   const rawCategory = post.data.category || '';
-  const cleanCategory = rawCategory.replace(/[^a-zA-Z]/g, '').toLowerCase();
+  let cleanCategory = rawCategory.replace(/[^a-zA-Z]/g, '').toLowerCase();
 
-  // 1. 优先采用 Frontmatter 显式指定的 image
-  let imageUrl = post.data.image;
-  
-  // 2. 如果没有指定 image，优先从本地 /images/categories/ 加载，若无则使用高级抽象矢量图兜底（绝不裂图）
-  if (!imageUrl) {
-    if (cleanCategory) {
-      imageUrl = `/images/categories/${cleanCategory}.svg`;
+  // 2. 若无 category，根据标题/slug 自动识别分类
+  if (!cleanCategory) {
+    const searchContext = (cleanSlug + ' ' + fullTitle).toLowerCase();
+    if (searchContext.includes('circadian') || searchContext.includes('sleep') || searchContext.includes('clock')) {
+      cleanCategory = 'sleep';
+    } else if (searchContext.includes('autophagy') || searchContext.includes('mtor') || searchContext.includes('ampk')) {
+      cleanCategory = 'cellular';
+    } else if (searchContext.includes('gut') || searchContext.includes('microbiota') || searchContext.includes('diet') || searchContext.includes('omega')) {
+      cleanCategory = 'nutrition';
+    } else if (searchContext.includes('mitochondria') || searchContext.includes('nad')) {
+      cleanCategory = 'mitochondria';
+    } else if (searchContext.includes('neuro') || searchContext.includes('vagus')) {
+      cleanCategory = 'neuroscience';
+    } else if (searchContext.includes('dna') || searchContext.includes('gene')) {
+      cleanCategory = 'dna';
     } else {
-      // 绝对可靠的学术几何矢量图生成接口
-      imageUrl = `https://api.dicebear.com/8.x/shapes/svg?seed=${cleanSlug}&backgroundColor=1e3a2b,2c5282,1a365d,276749`;
+      cleanCategory = 'longevity';
     }
+  }
+
+  // 3. 智能在线学术配图（极速 CDN，防裂图）
+  let imageUrl = post.data.image;
+  if (!imageUrl) {
+    const categoryImages: Record<string, string> = {
+      sleep: "https://images.unsplash.com/photo-1511295742362-92c96b124e52?auto=format&fit=crop&w=800&q=80",
+      cellular: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=800&q=80",
+      nutrition: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80",
+      mitochondria: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80",
+      neuroscience: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800&q=80",
+      dna: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=800&q=80",
+      longevity: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80"
+    };
+
+    imageUrl = categoryImages[cleanCategory] || categoryImages['longevity'];
   }
 
   return {
@@ -499,7 +522,7 @@ const grid = gridPosts.map(parsePost);
               alt={hero.titleEn} 
               class="hero-image" 
               loading="lazy"
-              onerror="this.onerror=null; this.src='https://api.dicebear.com/8.x/shapes/svg?seed=fallback';" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80';" 
             />
           </div>
           <div class="hero-content">
@@ -540,7 +563,7 @@ const grid = gridPosts.map(parsePost);
                     alt={post.titleEn} 
                     class="grid-image" 
                     loading="lazy" 
-                    onerror="this.onerror=null; this.src='https://api.dicebear.com/8.x/shapes/svg?seed=fallback';"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80';"
                   />
                 </div>
                 <div class="grid-content">
