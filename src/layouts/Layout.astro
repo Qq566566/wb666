@@ -1,23 +1,68 @@
-<!doctype html>
+---
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = "VITA Longevity Institute - Peer-Reviewed Health & Longevity Science Repository." } = Astro.props;
+---
+
+<!dnctype html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8" />
+		<meta charset="UTF-8" />
+		<meta name="description" content={description} />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
-	<body>
-		<slot />
+	<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+		<!--  Header -->
+		<header class="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+			<div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+				<a href="/" class="flex items-center gap-3 decoration-0">
+					<div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow-sm">
+						V
+					</div>
+					<div>
+						<span class="font-bold text-slate-900 tracking-tight text-lg block leading-none">VITA Repository</span>
+						<span class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider block mt-1">Longevity & Health Intelligence</span>
+					</div>
+				</a>
+				<div class="flex items-center gap-4 text-xs font-medium text-slate-600">
+					<span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+						<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+						Peer-Reviewed Database
+					</span>
+				</div>
+			</div>
+		</header>
+
+		<!--  -->
+		<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+			<Slot />
+		</main>
+
+		<!-- Footer -->
+		<footer class="border-t border-slate-200 bg-slate-900 text-slate-400 mt-16 py-12 text-sm">
+			<div class="max-w-6xl mx-auto px-4 space-y-6">
+				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-6">
+					<div>
+						<h3 class="text-white font-semibold text-base mb-1">VITA Longevity Institute</h3>
+						<p class="text-xs text-slate-400">Translating cutting-edge clinical neuroscience, cellular metabolism, and longevity research into actionable human protocols.</p>
+					</div>
+					<div class="text-xs text-slate-500 whitespace-nowrap">
+						Evidence Grade: <span class="text-emerald-400 font-mono">Grade-A Clinical Focus</span>
+					</div>
+				</div>
+
+				<!-- Medical Disclaimer -->
+				<div class="text-xs leading-relaxed text-slate-500 space-y-2">
+					<p><strong class="text-slate-400">MEDICAL DISCLAIMER:</strong> The content published on VITA Repository is strictly for academic, educational, and research informational purposes. It does not constitute formal medical advice, clinical diagnosis, or treatment protocols. Never disregard professional medical advice or delay seeking it because of information read on this portal.</p>
+					<p>© {new Date().getFullYear()} VITA Longevity Institute. All rights reserved. Indexed in Open Research Databases.</p>
+				</div>
+			</div>
+		</footer>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
