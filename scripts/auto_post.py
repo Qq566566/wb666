@@ -22,7 +22,7 @@ MAX_DAILY_POSTS = 5  # 定时发布的每日上限
 BLOG_DIR = os.path.join("src", "content", "blog")
 
 def get_beijing_today():
-    """获取北京时间 (UTC+8) 日期"""
+    """获取北京时间 (UTC+8) 日期字符串 YYYY-MM-DD"""
     utc_now = datetime.datetime.now(datetime.timezone.utc)
     beijing_now = utc_now + datetime.timedelta(hours=8)
     return beijing_now.strftime("%Y-%m-%d")
@@ -81,10 +81,11 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
+    # 注意：pubDate 切勿使用引号包裹，保证 YAML 将其识别为原生 Date
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
-pubDate: "{today}"
+pubDate: {today}
 ---"""
 
 def generate_article():
@@ -95,7 +96,7 @@ def generate_article():
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     is_manual = (event_name == "workflow_dispatch")
     
-    # 统计今天“定时发布”的文章数量
+    # 统计今天生成的文章数量
     today_files = [f for f in os.listdir(BLOG_DIR) if f.startswith(today) and f.endswith(".md")]
     current_count = len(today_files)
 
@@ -107,7 +108,6 @@ def generate_article():
             print(f"已达到每日最多定时发布上限 ({MAX_DAILY_POSTS} 篇)，本次跳过。")
             return
 
-    # 获取热点和历史已写标题
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
@@ -162,7 +162,6 @@ EN_DESC: (一句话英文摘要)
 
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today)
 
-    # 提取正文
     en_body, cn_body = "", ""
     if "=== CHINESE SECTION ===" in raw_content:
         parts = raw_content.split("=== CHINESE SECTION ===")
@@ -182,7 +181,6 @@ EN_DESC: (一句话英文摘要)
         f.write(final_content)
 
     print(f"✅ 成功生成并保存文章: {file_path}")
-    print(f"📌 标题: {title_cn}")
 
 if __name__ == "__main__":
     generate_article()
