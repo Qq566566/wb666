@@ -34,6 +34,7 @@ def get_us_formatted_date(date_str):
 
 def generate_clean_slug(title_en):
     """将英文标题转化为干净的 URL slug (保留前 6 个核心单词)"""
+    # 移除特殊字符，转小写，空格换连字符
     clean_title = re.sub(r'[^a-zA-Z0-9\s-]', '', title_en.lower())
     slug_words = re.sub(r'[\s-]+', '-', clean_title).strip('-').split('-')[:6]
     slug = "-".join(slug_words)
@@ -77,7 +78,7 @@ def fetch_today_health_trends():
             if trending_topics:
                 print(f"📰 成功从 Bing 新闻抓取到 {len(trending_topics)} 个医学新闻话题")
         except Exception as e:
-            print(f"⚠️ Bing 新闻抓取跳过 ({e})")
+            print(f"⚠️ Bing 新闻抓取失败 ({e})")
 
     # 3. 终极学术兜底：直接向 PubMed 全球医学数据库请求最新权威论文标题
     if not trending_topics:
@@ -108,7 +109,7 @@ def fetch_today_health_trends():
 
     # 4. 罕见失败时的极简降级（基于实时时间戳随机化）
     if not trending_topics:
-        trending_topics.append(f"前沿生物医学与细胞衰老机制突破_{random.randint(100, 999)}")
+        trending_topics.append(f"前沿生物医学机制与干预策略研究_{random.randint(1000, 9999)}")
 
     return random.choice(trending_topics)
 
@@ -124,28 +125,35 @@ def get_existing_titles():
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     content = f.read(1000)
+                    # 匹配 frontmatter 中的 title
                     match = re.search(r'title:\s*"(.*?)"', content)
                     if match:
                         titles.append(match.group(1))
             except Exception:
                 pass
+    # 返回最近 20 篇标题用于 AI 参考
     return titles[-20:]
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
+    """
+    清洗并生成 Markdown Frontmatter。
+    加入了 heroImage 和 image 字段，使用动态 URL 确保配图不重复。
+    """
+    # 替换引号防 YAML 崩溃
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
-    # 【防呆清洗】过滤掉所有标点符号和空格，只保留纯小写字母
+    # 分类清洗
     clean_cat = re.sub(r'[^a-zA-Z]', '', category).lower()
-    
-    # 允许的合法分类清单，若不在清单内则默认回退到 longevity
     valid_categories = {"mitochondria", "nutrition", "sleep", "dna", "metabolism", "neuroscience", "longevity", "cellular"}
     if clean_cat not in valid_categories:
         clean_cat = "longevity"
     
     # ----------------【动态独一无二图片链接生成】----------------
-    # 结合 slug 与分类，生成专属 Seed，确保每篇文章分配到绝对不同的高清图片
-    img_seed = f"{slug}-{random.randint(100, 999)}"
+    # 结合【今日日期 + 核心单词 Slug + 分类】，生成专属 Seed
+    # 这样 Picsum API 会基于这个 Seed 返回一张固定的、但绝对不和别的文章重复的高清图
+    img_seed = f"{today}-{slug}-{clean_cat}"
+    # 这里同时注入 image 和 heroImage 字段，适配大部分 Astro 模板
     hero_image = f"https://picsum.photos/seed/{img_seed}/1200/630"
     
     return f"""---
@@ -162,6 +170,7 @@ def generate_article():
     us_date = get_us_formatted_date(today)
     os.makedirs(BLOG_DIR, exist_ok=True)
     
+    # 检查发布配额
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     is_manual = (event_name == "workflow_dispatch")
     
@@ -176,35 +185,20 @@ def generate_article():
             print(f"已达到每日最多定时发布上限 ({MAX_DAILY_POSTS} 篇)，本次跳过。")
             return
 
+    # 获取热点及查重
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
     print(f"=== 开始撰写智库级精选博文 (参考热点/论文: {trend}) ===")
 
-    # 随机选择标题表达角度，彻底规避固定句式
-    title_styles = [
-        "Focus on breakthrough mechanism (e.g. 'Targeting [X]: How [Mechanism] Controls [Y]')",
-        "Focus on practical longevity protocol (e.g. 'The [X] Protocol: Evidence-Based [Action]')",
-        "Focus on clinical review insight (e.g. '[X] and [Y]: A Molecular Review of [Topic]')",
-        "Focus on paradigm shift (e.g. 'Rethinking [Topic]: New Findings in [Field]')"
-    ]
-    chosen_style = random.choice(title_styles)
-
+    # 提示词：要求地道英文 + 学术中文
     prompt = f"""
 You are the Chief Science Officer and Medical Journalist for "VITA Longevity Repository", a world-class health research database.
 
 Write an authoritative, peer-reviewed style research paper based on: 《{trend}》.
 
-【TITLE STYLING REQUIREMENT】:
-{chosen_style}
-Do NOT use repetitive generic title phrases like "...与长寿" or "...的日常实践". Make the title sharp, specific, and academic.
-
-【STRICT FACTUALITY & MEDICAL INTEGRITY】:
-1. Base all mechanisms and physiological claims strictly on real science (e.g., studies published in Nature, Cell, Science, Lancet, or PubMed).
-2. Do NOT invent fake clinical data or fabricated chemical molecules. If discussing hypotheses, state them clearly as pre-clinical or mechanistic models.
-
 【ANTI-DUPLICATION】:
-Do not write about or reuse titles from these past topics:
+Do not write about these past topics or use similar titles:
 {json.dumps(existing_titles, ensure_ascii=False)}
 
 【E-E-A-T & DE-AI WRITING REQUIREMENTS】:
@@ -216,7 +210,7 @@ Do not write about or reuse titles from these past topics:
    - `> 💡 **Key Takeaways**`: 3 bullet points summarizing core actionable findings.
    - Core Mechanisms (mentioning Harvard, Stanford, Nature, or Cell studies).
    - Practical Protocol (Checklist / Table).
-   - **References Section**: At the bottom, provide 2-3 real, traceable academic references (e.g., *Journal of Clinical Endocrinology*, *Nature Neuroscience*, *Cell Metabolism*).
+   - **References Section**: At the bottom, provide 2-3 real, traceable academic references (e.g., *Journal of Clinical Endocrinology*, *Nature Neuroscience*).
    - **Medical Disclaimer**: End with a formal medical disclaimer block.
 
 【REQUIRED OUTPUT FORMAT】:
@@ -237,19 +231,20 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.85, # 提高随机采样度
+        temperature=0.7,
     )
 
     raw_content = response.choices[0].message.content.strip()
 
-    # 动态产生默认兜底参数（防止匹配失败时重复）
+    # 1. 解析标题部分
     rand_tag = random.randint(1000, 9999)
-    title_cn = f"前沿生命科学机制研究 #{rand_tag}"
-    title_en = f"Advanced Life Science Mechanism #{rand_tag}"
-    desc_cn, desc_en = "探讨前沿健康科学机制与临床干预策略。", "Exploring advanced health science mechanisms and strategies."
+    # 使用随机字符串作为兜底，彻底解决默认标题重复
+    title_cn, title_en = f"前沿健康科学机制解析 #{rand_tag}", f"Health Science Mechanism Study #{rand_tag}"
+    desc_cn, desc_en = "探讨最新健康科学机制与实操策略。", "Exploring health mechanisms and lifestyle strategies."
     category = "longevity"
     
     if "=== TITLE SECTION ===" in raw_content:
+        # 提取 === ENGLISH SECTION === 之前的部分
         title_part = raw_content.split("=== ENGLISH SECTION ===")[0]
         m_cn = re.search(r'CN_TITLE:\s*(.*)', title_part)
         m_en = re.search(r'EN_TITLE:\s*(.*)', title_part)
@@ -257,32 +252,42 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
         d_en = re.search(r'EN_DESC:\s*(.*)', title_part)
         m_cat = re.search(r'CATEGORY:\s*(.*)', title_part)
         
+        # 只有解析成功且不为空时才替换默认值
         if m_cn and m_cn.group(1).strip(): title_cn = m_cn.group(1).strip()
         if m_en and m_en.group(1).strip(): title_en = m_en.group(1).strip()
         if d_cn and d_cn.group(1).strip(): desc_cn = d_cn.group(1).strip()
         if d_en and d_en.group(1).strip(): desc_en = d_en.group(1).strip()
         if m_cat and m_cat.group(1).strip():
+            # 提取时先做一次初步清洗，只保留字母
             category = re.sub(r'[^a-zA-Z]', '', m_cat.group(1)).lower()
 
+    # 2. 生成 slug (基于英文标题)
     slug = generate_clean_slug(title_en)
+    
+    # 3. 清洗并生成 yaml frontmatter (传入 slug 用于生成唯一图片 Seed)
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug)
 
+    # 4. 拼接中英文正文
     en_body, cn_body = "", ""
     if "=== CHINESE SECTION ===" in raw_content:
         parts = raw_content.split("=== CHINESE SECTION ===")
+        # 移除标识符，提取英文部分
         en_part = parts[0].split("=== ENGLISH SECTION ===")[-1].strip()
         cn_part = parts[1].strip()
+        # 注入多语言切换控制的 div (如果前端需要)
         en_body = f'<div class="lang-block lang-en">\n\n{en_part}\n\n</div>'
         cn_body = f'<div class="lang-block lang-cn" style="display: none;">\n\n{cn_part}\n\n</div>'
     else:
+        # 如果格式解析失败，默认当作英文正文
         en_body = f'<div class="lang-block lang-en">\n\n{raw_content}\n\n</div>'
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
+    # 5. 保存文件 (增加文件名防撞击 Hash)
     filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
-
-    # 防碰撞：如果文件名重复，追加 Hash
+    
+    # 如果遇到同名文件，自动追加随机 Tag，彻底解决文件名覆盖导致重复
     if os.path.exists(file_path):
         filename = f"{slug}-{rand_tag}-{today}.md"
         file_path = os.path.join(BLOG_DIR, filename)
