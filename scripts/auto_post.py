@@ -27,6 +27,18 @@ def get_beijing_today():
     beijing_now = utc_now + datetime.timedelta(hours=8)
     return beijing_now.strftime("%Y-%m-%d")
 
+def get_us_formatted_date(date_str):
+    """转换 YYYY-MM-DD 为欧美美式风格日期 (例: July 29, 2026)"""
+    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+    return date_obj.strftime("%B %d, %Y")
+
+def generate_clean_slug(title_en):
+    """将英文标题转化为干净的 URL slug (保留前 6 个核心单词)"""
+    clean_title = re.sub(r'[^a-zA-Z0-9\s-]', '', title_en.lower())
+    slug_words = re.sub(r'[\s-]+', '-', clean_title).strip('-').split('-')[:6]
+    slug = "-".join(slug_words)
+    return slug if slug else "health-research"
+
 def fetch_today_health_trends():
     """抓取当日健康/医学热点主题"""
     trending_topics = []
@@ -81,7 +93,7 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
-    # 注意：pubDate 切勿使用引号包裹，保证 YAML 将其识别为原生 Date
+    # pubDate 保持 YYYY-MM-DD，保证 Astro 解析正常
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
@@ -90,14 +102,15 @@ pubDate: {today}
 
 def generate_article():
     today = get_beijing_today()
+    us_date = get_us_formatted_date(today)
     os.makedirs(BLOG_DIR, exist_ok=True)
     
     # 区分手动触发与定时触发
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     is_manual = (event_name == "workflow_dispatch")
     
-    # 统计今天生成的文章数量
-    today_files = [f for f in os.listdir(BLOG_DIR) if f.startswith(today) and f.endswith(".md")]
+    # 统计今天生成的文章数量 (精确匹配文件名结尾的日期)
+    today_files = [f for f in os.listdir(BLOG_DIR) if f.endswith(f"-{today}.md")]
     current_count = len(today_files)
 
     if is_manual:
@@ -111,30 +124,35 @@ def generate_article():
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
-    print(f"=== 开始撰写文章 (参考热点: {trend}) ===")
+    print(f"=== 开始撰写精品文章 (参考热点: {trend}) ===")
 
     prompt = f"""
 你是一位顶级的健康医学科普作家与抗衰老研究学者。
-请结合今天的健康热点/前沿方向《{trend}》，为你自己的双语健康博客撰写一篇**全新切入点**的深度科普文章。
+请结合今天的健康热点/前沿方向《{trend}》，为你自己的双语健康博客撰写一篇**高规格精品**深度科普文章。
 
 【防重要求】：
-以下是你之前已经撰写过的文章标题，**绝对不要重复**类似的主题或观点：
+绝对不要重复以下已写过的标题与主题：
 {json.dumps(existing_titles, ensure_ascii=False)}
 
-【输出要求】：
+【精品写作要求】：
+1. 引用权威背书：涉及机制时，需提及知名科研机构（如 Harvard Health, Stanford Neuroscience, Nature 等）。
+2. 包含 Key Takeaways：英文部分开头必须包含一个 `> 💡 **Key Takeaways**` 引用卡片，总结 3 条一句话干货。
+3. 包含 Protocol 表格/卡片：必须提供可操作的日常复选框清单或表格。
+
+【输出格式要求】：
 请严格按照以下格式输出：
 
 === TITLE SECTION ===
 CN_TITLE: (吸引人且专业的中文文章标题)
-EN_TITLE: (对应的英文文章标题)
+EN_TITLE: (对应的英文文章标题，简洁规范)
 CN_DESC: (一句话中文摘要，100字以内)
 EN_DESC: (一句话英文摘要)
 
 === ENGLISH SECTION ===
-(用纯英文撰写完整文章，包括：Introduction, Core Mechanisms, Actionable Recommendations, Conclusion。)
+(用纯英文撰写，结构包含：Introduction, Key Takeaways 卡片, Core Mechanisms, Actionable Protocol, Conclusion。)
 
 === CHINESE SECTION ===
-(用纯中文撰写完整文章，包括：引言、核心机制、实操建议、总结。)
+(用纯中文撰写，结构包含：引言、核心机制、实操指南、总结。)
 """
 
     response = client.chat.completions.create(
@@ -174,13 +192,15 @@ EN_DESC: (一句话英文摘要)
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    filename = f"{today}-{random.randint(1000, 9999)}.md"
+    # 生成干净的英文 Slug 文件名：例如 combating-brain-fog-2026-07-29.md
+    slug = generate_clean_slug(title_en)
+    filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
 
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(final_content)
 
-    print(f"✅ 成功生成并保存文章: {file_path}")
+    print(f"✅ 成功生成精品文章: {file_path}")
 
 if __name__ == "__main__":
     generate_article()
