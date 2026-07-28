@@ -40,33 +40,75 @@ def generate_clean_slug(title_en):
     return slug if slug else "health-research"
 
 def fetch_today_health_trends():
-    """抓取当日健康/医学热点主题"""
+    """多源高可靠抓取：百度热搜官方 -> Bing 医学新闻 -> PubMed 真实权威论文"""
     trending_topics = []
-    try:
-        req = urllib.request.Request(
-            "https://tenapi.cn/v2/baiduhot",
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-        with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode("utf-8"))
-            if data.get("code") == 200:
-                for item in data.get("data", []):
-                    title = item.get("name", "")
-                    if any(k in title for k in ["健康", "医", "药", "病", "睡", "食", "老", "身", "心", "血"]):
-                        trending_topics.append(title)
-    except Exception as e:
-        print(f"⚠️ 热点抓取跳过 ({e})，将切换至备用知识库。")
 
+    # 1. 尝试百度官方实时热搜榜
+    try:
+        url = "https://top.baidu.com/board?tab=realtime"
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            html = resp.read().decode('utf-8')
+            raw_titles = re.findall(r'"word":"([^"]+)"', html)
+            
+            keywords = ["健康", "医", "药", "病", "睡", "食", "老", "身", "心", "血", "脑", "肠", "肝", "癌", "糖", "脂", "维", "素", "菌"]
+            for title in raw_titles:
+                if any(k in title for k in keywords):
+                    trending_topics.append(title)
+        if trending_topics:
+            print(f"🔥 成功从百度热搜抓取到 {len(trending_topics)} 个健康话题")
+    except Exception as e:
+        print(f"⚠️ 百度热搜抓取跳过 ({e})")
+
+    # 2. 若百度未搜到，抓取 Bing 最新国内健康新闻
     if not trending_topics:
-        backup_angles = [
-            "最新的昼夜节律与睡眠修复研究",
-            "肠道菌群与情绪管理的前沿进展",
-            "针对慢性炎症的抗炎饮食策略",
-            "办公族抗疲劳与线粒体激活",
-            "科学补镁与神经系统放松",
-            "细胞自噬与延缓衰老的日常实践"
-        ]
-        trending_topics.append(random.choice(backup_angles))
+        try:
+            bing_url = "https://cn.bing.com/news/search?q=%e5%81%a5%e5%ba%b7+%e5%8c%bb%e5%ad%a6+%e7%a0%94%e7%a9%b6"
+            req = urllib.request.Request(bing_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                html = resp.read().decode('utf-8')
+                titles = re.findall(r'class="title"[^>]*>(.*?)</a>', html)
+                for t in titles:
+                    clean_t = re.sub(r'<[^>]+>', '', t).strip()
+                    if clean_t and len(clean_t) > 6:
+                        trending_topics.append(clean_t)
+            if trending_topics:
+                print(f"📰 成功从 Bing 新闻抓取到 {len(trending_topics)} 个医学新闻话题")
+        except Exception as e:
+            print(f"⚠️ Bing 新闻抓取跳过 ({e})")
+
+    # 3. 终极学术兜底：直接向 PubMed 全球医学数据库请求最新权威论文标题
+    if not trending_topics:
+        try:
+            print("🔬 开启 PubMed 权威论文数据库实时检索...")
+            search_terms = ["longevity", "mitochondria", "circadian sleep", "gut microbiota", "autophagy", "cellular senescence", "metabolism"]
+            chosen_term = random.choice(search_terms)
+            
+            pm_search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={chosen_term}&retmax=10&sort=pub_date&retmode=json"
+            req = urllib.request.Request(pm_search_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                id_list = data.get("esearchresult", {}).get("idlist", [])
+
+            if id_list:
+                pm_summary_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={','.join(id_list)}&retmode=json"
+                req_sum = urllib.request.Request(pm_summary_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req_sum, timeout=5) as resp:
+                    sum_data = json.loads(resp.read().decode('utf-8')).get("result", {})
+                    for p_id in id_list:
+                        paper_title = sum_data.get(p_id, {}).get("title", "")
+                        if paper_title:
+                            trending_topics.append(paper_title)
+            if trending_topics:
+                print(f"📖 成功从 PubMed 检索到 {len(trending_topics)} 篇最新发表论文")
+        except Exception as e:
+            print(f"⚠️ PubMed 检索跳过 ({e})")
+
+    # 4. 罕见失败时的极简降级（基于实时时间戳随机化）
+    if not trending_topics:
+        trending_topics.append(f"前沿生物医学与细胞衰老机制突破_{random.randint(100, 999)}")
 
     return random.choice(trending_topics)
 
@@ -130,12 +172,16 @@ def generate_article():
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
-    print(f"=== 开始撰写智库级精选博文 (参考热点: {trend}) ===")
+    print(f"=== 开始撰写智库级精选博文 (参考热点/论文: {trend}) ===")
 
     prompt = f"""
 You are the Chief Science Officer and Medical Journalist for "VITA Longevity Repository", a world-class health research database.
 
 Write an authoritative, peer-reviewed style research paper based on: 《{trend}》.
+
+【STRICT FACTUALITY & MEDICAL INTEGRITY】:
+1. Base all mechanisms and physiological claims strictly on real science (e.g., studies published in Nature, Cell, Science, Lancet, or PubMed).
+2. Do NOT invent fake clinical data or fabricated chemical molecules. If discussing hypotheses, state them clearly as pre-clinical or mechanistic models.
 
 【ANTI-DUPLICATION】:
 Do not write about these past topics:
@@ -150,12 +196,12 @@ Do not write about these past topics:
    - `> 💡 **Key Takeaways**`: 3 bullet points summarizing core actionable findings.
    - Core Mechanisms (mentioning Harvard, Stanford, Nature, or Cell studies).
    - Practical Protocol (Checklist / Table).
-   - **References Section**: At the bottom, provide 2-3 realistic academic references (e.g., *Journal of Clinical Endocrinology*, *Nature Neuroscience*).
+   - **References Section**: At the bottom, provide 2-3 real, traceable academic references (e.g., *Journal of Clinical Endocrinology*, *Nature Neuroscience*, *Cell Metabolism*).
    - **Medical Disclaimer**: End with a formal medical disclaimer block.
 
 【REQUIRED OUTPUT FORMAT】:
 === TITLE SECTION ===
-CN_TITLE: (专业中文标题)
+CN_TITLE: (专业中文标题，切忌标题党，需学术严谨)
 EN_TITLE: (Native, concise, and academic English title)
 CN_DESC: (一句话中文摘要，100字以内)
 EN_DESC: (One-sentence clear English summary)
@@ -193,7 +239,6 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
         if d_cn: desc_cn = d_cn.group(1).strip()
         if d_en: desc_en = d_en.group(1).strip()
         if m_cat:
-            # 提取时先做一次初步清洗
             category = re.sub(r'[^a-zA-Z]', '', m_cat.group(1)).lower()
 
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today)
