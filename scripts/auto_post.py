@@ -89,14 +89,16 @@ def get_existing_titles():
                 pass
     return titles[-20:]
 
-def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today):
+def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today):
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
+    clean_cat = category.strip().lower() if category else "health"
     
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
 pubDate: {today}
+category: "{clean_cat}"
 ---"""
 
 def generate_article():
@@ -150,6 +152,7 @@ CN_TITLE: (专业中文标题)
 EN_TITLE: (Native, concise, and academic English title)
 CN_DESC: (一句话中文摘要，100字以内)
 EN_DESC: (One-sentence clear English summary)
+CATEGORY: (Select strictly ONE English word matching the research domain from: [mitochondria, nutrition, sleep, dna, metabolism, neuroscience, longevity, cellular])
 
 === ENGLISH SECTION ===
 (Write pure native English article matching all E-E-A-T requirements above.)
@@ -168,6 +171,7 @@ EN_DESC: (One-sentence clear English summary)
 
     title_cn, title_en = "最新健康前沿研究", "Latest Health Science Research"
     desc_cn, desc_en = "探讨最新健康科学机制与实操策略。", "Exploring health mechanisms and lifestyle strategies."
+    category = "health"
     
     if "=== TITLE SECTION ===" in raw_content:
         title_part = raw_content.split("=== ENGLISH SECTION ===")[0]
@@ -175,13 +179,15 @@ EN_DESC: (One-sentence clear English summary)
         m_en = re.search(r'EN_TITLE:\s*(.*)', title_part)
         d_cn = re.search(r'CN_DESC:\s*(.*)', title_part)
         d_en = re.search(r'EN_DESC:\s*(.*)', title_part)
+        m_cat = re.search(r'CATEGORY:\s*(.*)', title_part)
         
         if m_cn: title_cn = m_cn.group(1).strip()
         if m_en: title_en = m_en.group(1).strip()
         if d_cn: desc_cn = d_cn.group(1).strip()
         if d_en: desc_en = d_en.group(1).strip()
+        if m_cat: category = m_cat.group(1).strip()
 
-    yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, today)
+    yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today)
 
     en_body, cn_body = "", ""
     if "=== CHINESE SECTION ===" in raw_content:
