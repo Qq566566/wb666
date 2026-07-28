@@ -60,7 +60,7 @@ const grid = gridPosts.map(parsePost);
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VITA Longevity Repository | 前沿健康生命生命智库</title>
+  <title>VITA Longevity Repository | 前沿健康生命智库</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@300;600&display=swap" rel="stylesheet">
@@ -85,12 +85,17 @@ const grid = gridPosts.map(parsePost);
       font-family: var(--sans-font);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .container {
       max-width: 1140px;
       margin: 0 auto;
       padding: 30px 24px;
+      width: 100%;
+      flex: 1;
     }
 
     /* Glocal Nav Header */
@@ -122,11 +127,41 @@ const grid = gridPosts.map(parsePost);
       font-size: 1.1rem;
     }
 
+    .logo-text-group {
+      display: flex;
+      flex-direction: column;
+    }
+
     .logo-text {
       font-size: 1.15rem;
       font-weight: 600;
       color: var(--text-primary);
       text-decoration: none;
+      line-height: 1.2;
+    }
+
+    .logo-subtext {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-peer {
+      font-size: 0.72rem;
+      background: var(--accent-light);
+      color: var(--accent-color);
+      border: 1px solid #d8e2dc;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 500;
     }
 
     .lang-toggle {
@@ -147,8 +182,7 @@ const grid = gridPosts.map(parsePost);
       color: var(--accent-color);
     }
 
-    /* 优质博客样式仿照：Hero 大图全宽区域
-    */
+    /* Hero 大图全宽区域 */
     .hero-section {
       margin-bottom: 60px;
       display: block;
@@ -188,10 +222,17 @@ const grid = gridPosts.map(parsePost);
     }
 
     .hero-content {
-      padding: 50px;
+      padding: 40px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+    }
+
+    .hero-meta-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
     }
 
     .feat-tag {
@@ -204,35 +245,31 @@ const grid = gridPosts.map(parsePost);
       padding: 4px 10px;
       border-radius: 4px;
       display: inline-block;
-      margin-bottom: 16px;
-      width: fit-content;
     }
 
     .hero-date {
       font-size: 0.85rem;
       color: var(--text-muted);
-      margin-bottom: 12px;
     }
 
     .hero-title {
-      font-size: 2rem;
+      font-size: 1.85rem;
       font-weight: 600;
-      line-height: 1.25;
-      margin-bottom: 18px;
+      line-height: 1.3;
+      margin-bottom: 16px;
       color: var(--text-primary);
       letter-spacing: -0.6px;
       font-family: var(--sans-font);
     }
 
     .hero-desc {
-      font-size: 1.05rem;
+      font-size: 0.98rem;
       color: var(--text-muted);
       line-height: 1.6;
       font-weight: 300;
     }
 
-    /* 优质博客样式仿照：下方卡片网格
-    */
+    /* 下方卡片网格 */
     .grid-section-title {
       font-size: 1.2rem;
       font-weight: 600;
@@ -240,6 +277,9 @@ const grid = gridPosts.map(parsePost);
       color: var(--text-primary);
       padding-bottom: 10px;
       border-bottom: 2px solid var(--accent-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .post-grid {
@@ -272,7 +312,7 @@ const grid = gridPosts.map(parsePost);
     }
 
     .grid-image-wrapper {
-      height: 200px;
+      height: 180px;
       overflow: hidden;
     }
 
@@ -288,20 +328,35 @@ const grid = gridPosts.map(parsePost);
     }
 
     .grid-content {
-      padding: 24px;
+      padding: 22px;
       flex-grow: 1;
       display: flex;
       flex-direction: column;
     }
 
-    .grid-date {
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .grid-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 10px;
     }
 
+    .grid-evidence-badge {
+      font-size: 0.7rem;
+      color: var(--accent-color);
+      font-weight: 600;
+      background: var(--accent-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .grid-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
     .grid-title {
-      font-size: 1.2rem;
+      font-size: 1.12rem;
       font-weight: 600;
       line-height: 1.4;
       margin-bottom: 10px;
@@ -310,7 +365,7 @@ const grid = gridPosts.map(parsePost);
     }
 
     .grid-desc {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: var(--text-muted);
       font-weight: 300;
       line-height: 1.55;
@@ -320,13 +375,66 @@ const grid = gridPosts.map(parsePost);
       overflow: hidden;
     }
 
-    footer {
+    /* 智库级 Footer 页脚 */
+    footer.site-footer {
+      background: #0f1715;
+      color: #94a3b8;
       margin-top: 80px;
-      padding-top: 30px;
-      border-top: 1px solid var(--border-color);
-      text-align: center;
+      padding: 48px 0 32px 0;
       font-size: 0.8rem;
-      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .footer-container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid #1e2925;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand h3 {
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .footer-brand p {
+      color: #64748b;
+      font-size: 0.8rem;
+      max-width: 600px;
+    }
+
+    .footer-grade {
+      color: #34d399;
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .disclaimer-title {
+      color: #cbd5e1;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .disclaimer-text {
+      color: #64748b;
+      line-height: 1.6;
+      font-size: 0.75rem;
     }
 
     /* Mobile Responsive */
@@ -335,13 +443,16 @@ const grid = gridPosts.map(parsePost);
         grid-template-columns: 1fr;
       }
       .hero-image-wrapper {
-        height: 250px;
+        height: 220px;
       }
       .hero-content {
-        padding: 30px;
+        padding: 24px;
       }
       .hero-title {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
+      }
+      .badge-peer {
+        display: none;
       }
     }
   </style>
@@ -351,9 +462,15 @@ const grid = gridPosts.map(parsePost);
     <header class="site-header">
       <div class="logo-group">
         <div class="logo-v">V</div>
-        <a href="/" class="logo-text">VITA Repository</a>
+        <div class="logo-text-group">
+          <a href="/" class="logo-text">VITA Repository</a>
+          <span class="logo-subtext">Longevity Science</span>
+        </div>
       </div>
-      <button class="lang-toggle" id="globalLangBtn" onclick="toggleGlobalLang()">🌐 ZH / 中文</button>
+      <div class="header-actions">
+        <span class="badge-peer">🔬 Peer-Reviewed Database</span>
+        <button class="lang-toggle" id="globalLangBtn" onclick="toggleGlobalLang()">🌐 ZH / 中文</button>
+      </div>
     </header>
 
     {hero ? (
@@ -363,8 +480,10 @@ const grid = gridPosts.map(parsePost);
             <img src={hero.imageUrl} alt={hero.titleEn} class="hero-image" loading="lazy" />
           </div>
           <div class="hero-content">
-            <div class="feat-tag">Latest Research</div>
-            <div class="hero-date">{hero.date}</div>
+            <div class="hero-meta-bar">
+              <span class="feat-tag">Featured Paper</span>
+              <span class="hero-date">{hero.date}</span>
+            </div>
             
             <h1 class="hero-title lang-en">{hero.titleEn}</h1>
             <h1 class="hero-title lang-cn" style="display: none;">{hero.titleCn}</h1>
@@ -382,7 +501,11 @@ const grid = gridPosts.map(parsePost);
 
     {grid.length > 0 && (
       <section class="grid-section">
-        <h2 class="grid-section-title">Research Archive</h2>
+        <h2 class="grid-section-title">
+          <span class="lang-en">Research Archive</span>
+          <span class="lang-cn" style="display: none;">文献智库归档</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">{grid.length + 1} papers published</span>
+        </h2>
         
         <div class="post-grid">
           {grid.map((post) => (
@@ -392,7 +515,10 @@ const grid = gridPosts.map(parsePost);
                   <img src={post.imageUrl} alt={post.titleEn} class="grid-image" loading="lazy" />
                 </div>
                 <div class="grid-content">
-                  <div class="grid-date">{post.date}</div>
+                  <div class="grid-meta">
+                    <span class="grid-evidence-badge">Grade-A Evidence</span>
+                    <span class="grid-date">{post.date}</span>
+                  </div>
                   
                   <h3 class="grid-title lang-en">{post.titleEn}</h3>
                   <h3 class="grid-title lang-cn" style="display: none;">{post.titleCn}</h3>
@@ -406,11 +532,30 @@ const grid = gridPosts.map(parsePost);
         </div>
       </section>
     )}
-
-    <footer>
-      <p>© 2026 VITA Longevity Institute. Evidence-based health science.</p>
-    </footer>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h3>VITA Longevity Institute</h3>
+          <p>Translating cutting-edge clinical neuroscience, cellular metabolism, and longevity research into actionable human protocols.</p>
+        </div>
+        <div class="footer-grade">
+          Grade-A Clinical Focus
+        </div>
+      </div>
+      <div class="disclaimer-box">
+        <div class="disclaimer-title">MEDICAL DISCLAIMER</div>
+        <p class="disclaimer-text">
+          The content published on VITA Repository is strictly for academic, educational, and research informational purposes. It does not constitute formal medical advice, clinical diagnosis, or treatment protocols. Never disregard professional medical advice or delay seeking it because of information read on this portal.
+        </p>
+        <p class="disclaimer-text" style="margin-top: 12px; color: #475569;">
+          © {new Date().getFullYear()} VITA Longevity Institute. All rights reserved. Indexed in Open Research Databases.
+        </p>
+      </div>
+    </div>
+  </footer>
 
   <script is:inline>
     function formatPageByLang(lang) {
