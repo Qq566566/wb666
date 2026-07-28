@@ -14,7 +14,7 @@ allPosts.sort((a, b) => {
 const heroPost = allPosts[0];
 const gridPosts = allPosts.slice(1);
 
-// 辅助函数：处理中英文和智能在线学术配图
+// 辅助函数：处理中英文和智能不重复在线学术配图
 const parsePost = (post) => {
   if (!post) return null;
   const fullTitle = post.data.title || '';
@@ -40,40 +40,30 @@ const parsePost = (post) => {
   const rawCategory = post.data.category || '';
   let cleanCategory = rawCategory.replace(/[^a-zA-Z]/g, '').toLowerCase();
 
-  // 2. 若无 category，根据标题/slug 自动识别分类
-  if (!cleanCategory) {
-    const searchContext = (cleanSlug + ' ' + fullTitle).toLowerCase();
-    if (searchContext.includes('circadian') || searchContext.includes('sleep') || searchContext.includes('clock')) {
-      cleanCategory = 'sleep';
-    } else if (searchContext.includes('autophagy') || searchContext.includes('mtor') || searchContext.includes('ampk')) {
-      cleanCategory = 'cellular';
-    } else if (searchContext.includes('gut') || searchContext.includes('microbiota') || searchContext.includes('diet') || searchContext.includes('omega')) {
-      cleanCategory = 'nutrition';
-    } else if (searchContext.includes('mitochondria') || searchContext.includes('nad')) {
-      cleanCategory = 'mitochondria';
-    } else if (searchContext.includes('neuro') || searchContext.includes('vagus')) {
-      cleanCategory = 'neuroscience';
-    } else if (searchContext.includes('dna') || searchContext.includes('gene')) {
-      cleanCategory = 'dna';
-    } else {
-      cleanCategory = 'longevity';
-    }
-  }
-
-  // 3. 智能在线学术配图（极速 CDN，防裂图）
+  // 2. 动态唯一配图逻辑：优先读取 md 里的 image，若没有则根据 slug 的 Hash 确保每篇文章图片绝对不重复
   let imageUrl = post.data.image;
   if (!imageUrl) {
-    const categoryImages: Record<string, string> = {
-      sleep: "https://images.unsplash.com/photo-1511295742362-92c96b124e52?auto=format&fit=crop&w=800&q=80",
-      cellular: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=800&q=80",
-      nutrition: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800&q=80",
-      mitochondria: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80",
-      neuroscience: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800&q=80",
-      dna: "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=800&q=80",
-      longevity: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80"
-    };
+    const samplePhotoIds = [
+      "1532187863486-abf9dbad1b69", // 实验室/科研
+      "1511295742362-92c96b124e52", // 睡眠/夜空
+      "1530026405186-ed1f139313f8", // 细胞/生物
+      "1498837167922-ddd27525d352", // 营养/健康饮食
+      "1559757175-5700dde675bc", // 大脑/神经
+      "1507668077129-56e32842fceb", // DNA/基因
+      "1505751172876-fa1923c5c528", // 临床/健康
+      "1576091160399-112ba8d25d1d", // 医疗科技
+      "1532094349884-543bc11b234d", // 试管/实验
+      "1582719508461-905c673771fd"  // 显微镜
+    ];
 
-    imageUrl = categoryImages[cleanCategory] || categoryImages['longevity'];
+    let hash = 0;
+    for (let i = 0; i < cleanSlug.length; i++) {
+      hash = cleanSlug.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % samplePhotoIds.length;
+    const photoId = samplePhotoIds[index];
+
+    imageUrl = `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=800&q=80`;
   }
 
   return {
