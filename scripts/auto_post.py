@@ -145,38 +145,29 @@ def get_existing_titles():
 
 def generate_hero_image(slug, search_keyword):
     """
-    静态博客高清封面生成：
-    - MD5保证不同环境build稳定
-    - 多关键词降低重复率
-    - Unsplash动态图库
+    使用 Pexels 高质量图片库的稳定散列直链，
+    通过文章 slug 的 MD5 确保每篇文章图库唯一、跨平台构建稳定永不失效。
     """
     hash_value = hashlib.md5(slug.encode("utf-8")).hexdigest()
     seed = int(hash_value[:8], 16)
     rng = random.Random(seed)
-
-    keyword_variations = [
-        search_keyword,
-        f"{search_keyword} laboratory",
-        f"{search_keyword} research",
-        f"{search_keyword} microscopy",
-        f"{search_keyword} biotechnology",
-        f"{search_keyword} medical science"
+    
+    # 优质科技与生科相关的图片 ID 备选池（涵盖脑科学、细胞、基因、实验室等）
+    pexels_photo_ids = [
+        3825529, 3825539, 3825569, 3825581, 3825587, 
+        3825592, 3825615, 3825624, 3825638, 3825647,
+        2280571, 2280547, 2280551, 3735709, 3735777,
+        5726794, 5726706, 5726688, 3938022, 3938812
     ]
-
-    final_keyword = rng.choice(keyword_variations)
-    sig_num = rng.randint(100000, 999999)
-    keyword_encoded = urllib.parse.quote(final_keyword)
-
-    hero_image = (
-        "https://images.unsplash.com/source/random/1200x630?"
-        f"{keyword_encoded}&sig={sig_num}"
-    )
+    
+    photo_id = rng.choice(pexels_photo_ids)
+    hero_image = f"https://images.pexels.com/photos/{photo_id}/pexels-photo-{photo_id}.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop"
+    
     return hero_image
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
     清洗并生成 Markdown Frontmatter。
-    使用 Unsplash 高清图库作为特色封面源。
     """
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
