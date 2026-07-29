@@ -143,7 +143,8 @@ def get_existing_titles():
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
-    清洗并生成 Markdown Frontmatter，并从多张科学实验室图片池中动态挑选。
+    清洗并生成 Markdown Frontmatter。
+    使用 Unsplash 动态关键词搜索源，根据分类自动匹配海量不同风格的高清科技生物图片。
     """
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
@@ -153,23 +154,22 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
     if clean_cat not in valid_categories:
         clean_cat = "longevity"
     
-    # 精选的多张不同科技/实验室/生物医药类 Unsplash 图片 ID 池
-    science_image_ids = [
-        "photo-1532187863486-abf9dbad1b69", # 蓝色分子/试管
-        "photo-1507668077129-56e32842fceb", # 显微镜/细胞研究
-        "photo-1576091160399-112ba8d25d1d", # 现代医药实验室
-        "photo-1530497610245-94d3c16cda28", # 医疗科技/芯片
-        "photo-1579165466741-7f35e4755660", # 生物化学试剂
-        "photo-1582719478250-c89cae4dc85b", # 基因测序蓝光
-        "photo-1516549655169-df83a0774514", # 临床研究
-        "photo-1576091160550-2173dba999ef"  # 医疗数据分析
-    ]
+    # 针对不同健康分类匹配精准的英文生科图片搜索关键词
+    keyword_map = {
+        "mitochondria": "mitochondria+laboratory+science",
+        "nutrition": "biochemistry+nutrition+science",
+        "sleep": "brain+neuroscience+sleep+lab",
+        "dna": "dna+genetics+sequencing",
+        "metabolism": "cellular+metabolism+biology",
+        "neuroscience": "neuron+brain+science",
+        "longevity": "antiaging+biotechnology+lab",
+        "cellular": "cellular+biology+microscope"
+    }
+    search_keyword = keyword_map.get(clean_cat, "medical+research+laboratory")
     
-    # 结合每篇文章独特的 slug 稳定计算出不同的图片索引
-    img_index = abs(hash(slug)) % len(science_image_ids)
-    chosen_photo_id = science_image_ids[img_index]
-    
-    hero_image = f"https://images.unsplash.com/{chosen_photo_id}?w=1200&h=630&fit=crop&q=80"
+    # 结合文章的 slug 哈希值作为动态种子，既保证文章链接封面固定，又能在全网海量图库中随机出完全不同的照片
+    sig_num = abs(hash(slug)) % 1000000
+    hero_image = f"https://images.unsplash.com/source/random/1200x630?{search_keyword}&sig={sig_num}"
     
     return f"""---
 title: "{clean_title}"
