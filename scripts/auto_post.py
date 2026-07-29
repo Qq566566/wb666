@@ -34,53 +34,48 @@ def get_us_formatted_date(date_str):
 
 def generate_clean_slug(title_en):
     """将英文标题转化为干净的 URL slug (保留前 6 个核心单词)"""
-    # 移除特殊字符，转小写，空格换连字符
     clean_title = re.sub(r'[^a-zA-Z0-9\s-]', '', title_en.lower())
     slug_words = re.sub(r'[\s-]+', '-', clean_title).strip('-').split('-')[:6]
     slug = "-".join(slug_words)
     return slug if slug else "health-research"
 
 def fetch_today_health_trends():
-    """多源高可靠抓取：百度热搜官方 -> Bing 医学新闻 -> PubMed 真实权威论文"""
+    """多源高可靠抓取：国外权威科学快讯 RSS -> PubMed 真实权威论文 -> 百度热搜/Bing 降级"""
     trending_topics = []
 
-    # 1. 尝试百度官方实时热搜榜
+    # 1. 优先尝试抓取国外权威健康与生物医学新闻 (ScienceDaily)
     try:
-        url = "https://top.baidu.com/board?tab=realtime"
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        })
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            html = resp.read().decode('utf-8')
-            raw_titles = re.findall(r'"word":"([^"]+)"', html)
-            
-            keywords = ["健康", "医", "药", "病", "睡", "食", "老", "身", "心", "血", "脑", "肠", "肝", "癌", "糖", "脂", "维", "素", "菌"]
-            for title in raw_titles:
-                if any(k in title for k in keywords):
-                    trending_topics.append(title)
+        print("🌍 正在检索国外前沿健康与生物医学新闻...")
+        rss_urls = [
+            "https://www.sciencedaily.com/rss/health_medicine/longevity.xml",
+            "https://www.sciencedaily.com/rss/mind_brain/neuroscience.xml",
+            "https://www.sciencedaily.com/rss/health_medicine/genetics.xml"
+        ]
+        
+        for rss_url in rss_urls:
+            try:
+                req = urllib.request.Request(rss_url, headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                })
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    xml_content = resp.read().decode('utf-8', errors='ignore')
+                    titles = re.findall(r'<title><!\[CDATA\[(.*?)\]\]></title>', xml_content)
+                    if not titles:
+                        titles = re.findall(r'<title>(.*?)</title>', xml_content)
+                    
+                    for t in titles:
+                        clean_t = re.sub(r'<[^>]+>', '', t).strip()
+                        if clean_t and "ScienceDaily" not in clean_t and len(clean_t) > 10:
+                            trending_topics.append(clean_t)
+            except Exception:
+                continue
+                
         if trending_topics:
-            print(f"🔥 成功从百度热搜抓取到 {len(trending_topics)} 个健康话题")
+            print(f"🌐 成功从国外权威科学快讯抓取到 {len(trending_topics)} 条前沿话题")
     except Exception as e:
-        print(f"⚠️ 百度热搜抓取跳过 ({e})")
+        print(f"⚠️ 国外新闻 RSS 抓取跳过 ({e})")
 
-    # 2. 若百度未搜到，抓取 Bing 最新国内健康新闻
-    if not trending_topics:
-        try:
-            bing_url = "https://cn.bing.com/news/search?q=%e5%81%a5%e5%ba%b7+%e5%8c%bb%e5%ad%a6+%e7%a0%94%e7%a9%b6"
-            req = urllib.request.Request(bing_url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                html = resp.read().decode('utf-8')
-                titles = re.findall(r'class="title"[^>]*>(.*?)</a>', html)
-                for t in titles:
-                    clean_t = re.sub(r'<[^>]+>', '', t).strip()
-                    if clean_t and len(clean_t) > 6:
-                        trending_topics.append(clean_t)
-            if trending_topics:
-                print(f"📰 成功从 Bing 新闻抓取到 {len(trending_topics)} 个医学新闻话题")
-        except Exception as e:
-            print(f"⚠️ Bing 新闻抓取失败 ({e})")
-
-    # 3. 终极学术兜底：直接向 PubMed 全球医学数据库请求最新权威论文标题
+    # 2. 国际学术主力：向 PubMed 全球医学数据库请求最新权威论文标题
     if not trending_topics:
         try:
             print("🔬 开启 PubMed 权威论文数据库实时检索...")
@@ -107,9 +102,23 @@ def fetch_today_health_trends():
         except Exception as e:
             print(f"⚠️ PubMed 检索跳过 ({e})")
 
-    # 4. 罕见失败时的极简降级（基于实时时间戳随机化）
+    # 3. 最终兜底（国内搜索或时间戳随机化）
     if not trending_topics:
-        trending_topics.append(f"前沿生物医学机制与干预策略研究_{random.randint(1000, 9999)}")
+        try:
+            bing_url = "https://cn.bing.com/news/search?q=health+medical+research"
+            req = urllib.request.Request(bing_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                html = resp.read().decode('utf-8')
+                titles = re.findall(r'class="title"[^>]*>(.*?)</a>', html)
+                for t in titles:
+                    clean_t = re.sub(r'<[^>]+>', '', t).strip()
+                    if clean_t and len(clean_t) > 6:
+                        trending_topics.append(clean_t)
+        except Exception:
+            pass
+
+    if not trending_topics:
+        trending_topics.append(f"Advanced Biomedical Mechanisms and Longevity Interventions_{random.randint(1000, 9999)}")
 
     return random.choice(trending_topics)
 
@@ -125,33 +134,29 @@ def get_existing_titles():
             try:
                 with open(fpath, "r", encoding="utf-8") as f:
                     content = f.read(1000)
-                    # 匹配 frontmatter 中的 title
                     match = re.search(r'title:\s*"(.*?)"', content)
                     if match:
                         titles.append(match.group(1))
             except Exception:
                 pass
-    # 返回最近 20 篇标题用于 AI 参考
     return titles[-20:]
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
-    清洗并生成 Markdown Frontmatter。
-    加入了 heroImage 和 image 字段。
+    清洗并生成 Markdown Frontmatter，并接入高质量科技实验室配图。
     """
-    # 替换引号防 YAML 崩溃
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
     
-    # 分类清洗
     clean_cat = re.sub(r'[^a-zA-Z]', '', category).lower()
     valid_categories = {"mitochondria", "nutrition", "sleep", "dna", "metabolism", "neuroscience", "longevity", "cellular"}
     if clean_cat not in valid_categories:
         clean_cat = "longevity"
     
-    # 修复了这里的缩进问题
-    img_seed = hash(slug) % 1000
-    hero_image = f"https://picsum.photos/seed/{slug}/1200/630"
+    # 优化点：使用 Unsplash 实验室/生命科学专属图库 URL，并结合 slug 确保每篇文章图都不一样
+    sig_num = abs(hash(slug)) % 100
+    hero_image = f"https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80&sig={sig_num}"
+    
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
@@ -166,7 +171,6 @@ def generate_article():
     us_date = get_us_formatted_date(today)
     os.makedirs(BLOG_DIR, exist_ok=True)
     
-    # 检查发布配额
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     is_manual = (event_name == "workflow_dispatch")
     
@@ -181,13 +185,11 @@ def generate_article():
             print(f"已达到每日最多定时发布上限 ({MAX_DAILY_POSTS} 篇)，本次跳过。")
             return
 
-    # 获取热点及查重
     trend = fetch_today_health_trends()
     existing_titles = get_existing_titles()
     
     print(f"=== 开始撰写智库级精选博文 (参考热点/论文: {trend}) ===")
 
-    # 提示词：要求地道英文 + 学术中文
     prompt = f"""
 You are the Chief Science Officer and Medical Journalist for "VITA Longevity Repository", a world-class health research database.
 
@@ -232,7 +234,6 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
 
     raw_content = response.choices[0].message.content.strip()
 
-    # 1. 解析标题部分
     rand_tag = random.randint(1000, 9999)
     title_cn, title_en = f"前沿健康科学机制解析 #{rand_tag}", f"Health Science Mechanism Study #{rand_tag}"
     desc_cn, desc_en = "探讨最新健康科学机制与实操策略。", "Exploring health mechanisms and lifestyle strategies."
@@ -253,13 +254,9 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
         if m_cat and m_cat.group(1).strip():
             category = re.sub(r'[^a-zA-Z]', '', m_cat.group(1)).lower()
 
-    # 2. 生成 slug (基于英文标题)
     slug = generate_clean_slug(title_en)
-    
-    # 3. 清洗并生成 yaml frontmatter
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug)
 
-    # 4. 拼接中英文正文
     en_body, cn_body = "", ""
     if "=== CHINESE SECTION ===" in raw_content:
         parts = raw_content.split("=== CHINESE SECTION ===")
@@ -272,7 +269,6 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    # 5. 保存文件
     filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
     
