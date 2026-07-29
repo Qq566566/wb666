@@ -154,7 +154,8 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
     # 这样 Picsum API 会基于这个 Seed 返回一张固定的、但绝对不和别的文章重复的高清图
     img_seed = f"{today}-{slug}-{clean_cat}"
     # 这里同时注入 image 和 heroImage 字段，适配大部分 Astro 模板
-    hero_image = f"https://picsum.photos/seed/{img_seed}/1200/630"
+    # 修改后的代码（带有科技/实验室蓝绿调风格）
+hero_image = f"https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80"
     
     return f"""---
 title: "{clean_title}"
