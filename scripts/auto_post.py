@@ -145,24 +145,38 @@ def get_existing_titles():
 
 def generate_hero_image(slug, search_keyword):
     """
-    使用 Pexels API 或其精选社区高质量图库链接，
-    结合 MD5 散列和稳定的随机种子生成器，确保封面图跨平台稳定且不重复。
+    静态博客高清封面生成：
+    - MD5保证不同环境build稳定
+    - 多关键词降低重复率
+    - Unsplash动态图库
     """
     hash_value = hashlib.md5(slug.encode("utf-8")).hexdigest()
     seed = int(hash_value[:8], 16)
-    
     rng = random.Random(seed)
-    # 利用 Pexels 支持的图片 ID 范围或动态照片变体进行稳定散列
-    photo_id = rng.randint(3825500, 3825999) # 预设的高清科技/生科类优质图库 ID 段
-    
-    # 也可以直接利用 Pexels 官方高清直链结构
-    hero_image = f"https://images.pexels.com/photos/{photo_id}/pexels-photo-{photo_id}.jpeg?auto=compress&cs=tinysrgb&w=1200&h=630&fit=crop"
+
+    keyword_variations = [
+        search_keyword,
+        f"{search_keyword} laboratory",
+        f"{search_keyword} research",
+        f"{search_keyword} microscopy",
+        f"{search_keyword} biotechnology",
+        f"{search_keyword} medical science"
+    ]
+
+    final_keyword = rng.choice(keyword_variations)
+    sig_num = rng.randint(100000, 999999)
+    keyword_encoded = urllib.parse.quote(final_keyword)
+
+    hero_image = (
+        "https://images.unsplash.com/source/random/1200x630?"
+        f"{keyword_encoded}&sig={sig_num}"
+    )
     return hero_image
 
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
     清洗并生成 Markdown Frontmatter。
-    使用 Pexels 高清图库作为特色封面源。
+    使用 Unsplash 高清图库作为特色封面源。
     """
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
@@ -172,20 +186,52 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
     if clean_cat not in valid_categories:
         clean_cat = "longevity"
     
-    # 针对不同健康分类匹配精准的英文生科图片搜索关键词
     keyword_map = {
-        "mitochondria": "mitochondria laboratory science",
-        "nutrition": "biochemistry nutrition science",
-        "sleep": "brain neuroscience sleep lab",
-        "dna": "dna genetics sequencing",
-        "metabolism": "cellular metabolism biology",
-        "neuroscience": "neuron brain science",
-        "longevity": "antiaging biotechnology lab",
-        "cellular": "cellular biology microscope"
+        "mitochondria": [
+            "mitochondria cell energy",
+            "cellular respiration",
+            "molecular biology microscope"
+        ],
+        "nutrition": [
+            "nutrition science",
+            "biochemistry food research",
+            "metabolism laboratory"
+        ],
+        "sleep": [
+            "sleep neuroscience",
+            "circadian rhythm research",
+            "brain activity imaging"
+        ],
+        "dna": [
+            "DNA sequencing",
+            "genomics laboratory",
+            "genetic research"
+        ],
+        "metabolism": [
+            "cell metabolism",
+            "molecular biology",
+            "biochemical pathway"
+        ],
+        "neuroscience": [
+            "neuron microscopy",
+            "brain research",
+            "neuroscience laboratory"
+        ],
+        "longevity": [
+            "aging research",
+            "longevity science",
+            "biotechnology laboratory"
+        ],
+        "cellular": [
+            "cell biology",
+            "microscope cells",
+            "molecular science"
+        ]
     }
-    search_keyword = keyword_map.get(clean_cat, "medical research laboratory")
+
+    keywords = keyword_map.get(clean_cat, ["medical research laboratory"])
+    search_keyword = random.choice(keywords)
     
-    # 调用 Pexels 封面生成函数
     hero_image = generate_hero_image(slug, search_keyword)
     
     return f"""---
