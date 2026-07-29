@@ -137,7 +137,7 @@ def get_existing_titles():
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
     清洗并生成 Markdown Frontmatter。
-    加入了 heroImage 和 image 字段，使用动态 URL 确保配图不重复。
+    加入了 heroImage 和 image 字段。
     """
     # 替换引号防 YAML 崩溃
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
@@ -149,12 +149,8 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
     if clean_cat not in valid_categories:
         clean_cat = "longevity"
     
-    # ----------------【动态独一无二图片链接生成】----------------
-    # 结合【今日日期 + 核心单词 Slug + 分类】，生成专属 Seed
-    # 这样 Picsum API 会基于这个 Seed 返回一张固定的、但绝对不和别的文章重复的高清图
-    img_seed = f"{today}-{slug}-{clean_cat}"
-    # 这里同时注入 image 和 heroImage 字段，适配大部分 Astro 模板
-hero_image = f"https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80"
+    # 修复了这里的缩进问题
+    hero_image = "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80"
     
     return f"""---
 title: "{clean_title}"
@@ -238,13 +234,11 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
 
     # 1. 解析标题部分
     rand_tag = random.randint(1000, 9999)
-    # 使用随机字符串作为兜底，彻底解决默认标题重复
     title_cn, title_en = f"前沿健康科学机制解析 #{rand_tag}", f"Health Science Mechanism Study #{rand_tag}"
     desc_cn, desc_en = "探讨最新健康科学机制与实操策略。", "Exploring health mechanisms and lifestyle strategies."
     category = "longevity"
     
     if "=== TITLE SECTION ===" in raw_content:
-        # 提取 === ENGLISH SECTION === 之前的部分
         title_part = raw_content.split("=== ENGLISH SECTION ===")[0]
         m_cn = re.search(r'CN_TITLE:\s*(.*)', title_part)
         m_en = re.search(r'EN_TITLE:\s*(.*)', title_part)
@@ -252,42 +246,36 @@ CATEGORY: (Select strictly ONE English word from: [mitochondria, nutrition, slee
         d_en = re.search(r'EN_DESC:\s*(.*)', title_part)
         m_cat = re.search(r'CATEGORY:\s*(.*)', title_part)
         
-        # 只有解析成功且不为空时才替换默认值
         if m_cn and m_cn.group(1).strip(): title_cn = m_cn.group(1).strip()
         if m_en and m_en.group(1).strip(): title_en = m_en.group(1).strip()
         if d_cn and d_cn.group(1).strip(): desc_cn = d_cn.group(1).strip()
         if d_en and d_en.group(1).strip(): desc_en = d_en.group(1).strip()
         if m_cat and m_cat.group(1).strip():
-            # 提取时先做一次初步清洗，只保留字母
             category = re.sub(r'[^a-zA-Z]', '', m_cat.group(1)).lower()
 
     # 2. 生成 slug (基于英文标题)
     slug = generate_clean_slug(title_en)
     
-    # 3. 清洗并生成 yaml frontmatter (传入 slug 用于生成唯一图片 Seed)
+    # 3. 清洗并生成 yaml frontmatter
     yaml_header = clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug)
 
     # 4. 拼接中英文正文
     en_body, cn_body = "", ""
     if "=== CHINESE SECTION ===" in raw_content:
         parts = raw_content.split("=== CHINESE SECTION ===")
-        # 移除标识符，提取英文部分
         en_part = parts[0].split("=== ENGLISH SECTION ===")[-1].strip()
         cn_part = parts[1].strip()
-        # 注入多语言切换控制的 div (如果前端需要)
         en_body = f'<div class="lang-block lang-en">\n\n{en_part}\n\n</div>'
         cn_body = f'<div class="lang-block lang-cn" style="display: none;">\n\n{cn_part}\n\n</div>'
     else:
-        # 如果格式解析失败，默认当作英文正文
         en_body = f'<div class="lang-block lang-en">\n\n{raw_content}\n\n</div>'
 
     final_content = f"{yaml_header}\n\n{en_body}\n\n{cn_body}"
 
-    # 5. 保存文件 (增加文件名防撞击 Hash)
+    # 5. 保存文件
     filename = f"{slug}-{today}.md"
     file_path = os.path.join(BLOG_DIR, filename)
     
-    # 如果遇到同名文件，自动追加随机 Tag，彻底解决文件名覆盖导致重复
     if os.path.exists(file_path):
         filename = f"{slug}-{rand_tag}-{today}.md"
         file_path = os.path.join(BLOG_DIR, filename)
