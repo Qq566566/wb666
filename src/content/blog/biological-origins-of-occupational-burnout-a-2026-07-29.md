@@ -3,8 +3,8 @@ title: "职业倦怠的生物学根源：基于“除非死人不要请假”事
 description: "【中文摘要】本文基于一起医生被指发布极端请假政策的医疗管理事件，从分子层面解析慢性工作压力如何通过HPA轴失调、端粒缩短与线粒体功能障碍加速细胞衰老。【English Summary】This paper analyzes a reported incident where a physician allegedly enforced a “no leave unless dead” policy, examining how chronic occupational stress accelerates cellular aging via HPA axis dysregulation, telomere attrition, and mitochondrial dysfunction."
 pubDate: 2026-07-29
 category: "cellular"
-image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80"
-heroImage: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80"
+image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=89"
+heroImage: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=89"
 ---
 
 <div class="lang-block lang-en">
