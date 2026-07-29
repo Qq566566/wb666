@@ -5,6 +5,8 @@ import sys
 import re
 import json
 import urllib.request
+import hashlib
+import urllib.parse
 from openai import OpenAI
 
 # 1. 初始化客户端
@@ -141,10 +143,28 @@ def get_existing_titles():
                 pass
     return titles[-20:]
 
+def generate_hero_image(slug, search_keyword):
+    """
+    使用 MD5 散列和稳定的随机种子生成器，
+    确保本地和 GitHub Actions 跨平台生成的 Unsplash 封面图绝对一致且永不重复。
+    """
+    hash_value = hashlib.md5(slug.encode("utf-8")).hexdigest()
+    seed = int(hash_value[:8], 16)
+    
+    rng = random.Random(seed)
+    sig_num = rng.randint(100000, 999999)
+    keyword = urllib.parse.quote(search_keyword)
+
+    hero_image = (
+        f"https://images.unsplash.com/source/random/1200x630"
+        f"?{keyword}&sig={sig_num}"
+    )
+    return hero_image
+
 def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today, slug):
     """
     清洗并生成 Markdown Frontmatter。
-    使用 Unsplash 动态关键词搜索源，根据分类自动匹配海量不同风格的高清科技生物图片。
+    结合分类关键词与 MD5 稳定种子生成 Unsplash 动态封面图。
     """
     clean_title = f"{title_cn} | {title_en}".replace('"', "'").strip()
     clean_desc = f"【中文摘要】{desc_cn}【English Summary】{desc_en}".replace('"', "'").replace('\n', ' ').strip()
@@ -156,20 +176,19 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
     
     # 针对不同健康分类匹配精准的英文生科图片搜索关键词
     keyword_map = {
-        "mitochondria": "mitochondria+laboratory+science",
-        "nutrition": "biochemistry+nutrition+science",
-        "sleep": "brain+neuroscience+sleep+lab",
-        "dna": "dna+genetics+sequencing",
-        "metabolism": "cellular+metabolism+biology",
-        "neuroscience": "neuron+brain+science",
-        "longevity": "antiaging+biotechnology+lab",
-        "cellular": "cellular+biology+microscope"
+        "mitochondria": "mitochondria laboratory science",
+        "nutrition": "biochemistry nutrition science",
+        "sleep": "brain neuroscience sleep lab",
+        "dna": "dna genetics sequencing",
+        "metabolism": "cellular metabolism biology",
+        "neuroscience": "neuron brain science",
+        "longevity": "antiaging biotechnology lab",
+        "cellular": "cellular biology microscope"
     }
-    search_keyword = keyword_map.get(clean_cat, "medical+research+laboratory")
+    search_keyword = keyword_map.get(clean_cat, "medical research laboratory")
     
-    # 结合文章的 slug 哈希值作为动态种子，既保证文章链接封面固定，又能在全网海量图库中随机出完全不同的照片
-    sig_num = abs(hash(slug)) % 1000000
-    hero_image = f"https://images.unsplash.com/source/random/1200x630?{search_keyword}&sig={sig_num}"
+    # 调用高稳定性的图片生成函数
+    hero_image = generate_hero_image(slug, search_keyword)
     
     return f"""---
 title: "{clean_title}"
