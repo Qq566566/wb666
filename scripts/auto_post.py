@@ -150,8 +150,8 @@ def clean_yaml_frontmatter(title_cn, title_en, desc_cn, desc_en, category, today
         clean_cat = "longevity"
     
     # 修复了这里的缩进问题
-    hero_image = f"https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=630&fit=crop&q=80&sig={abs(hash(slug)) % 100}"
-    
+    img_seed = hash(slug) % 1000
+    hero_image = f"https://picsum.photos/seed/{slug}/1200/630"
     return f"""---
 title: "{clean_title}"
 description: "{clean_desc}"
