@@ -1,0 +1,17 @@
+.github/workflows/daily_post.yml
+
+# 1. 移除旧的远程关联（如果你之前连过旧仓库）
+git remote remove origin
+
+# 2. 将远程地址关联到你的新仓库 (wb666)
+git remote add origin https://github.com/Qq566566/wb666.git
+
+# 3. 把文件加入暂存区
+git add .
+
+# 4. 提交到本地仓库
+git commit -m "Initial commit"
+
+# 5. 设置主分支并推送到 GitHub 新仓库
+git branch -M main
+git push -u origin main
